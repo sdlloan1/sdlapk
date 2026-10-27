@@ -1,0 +1,20 @@
+name: sdl-apk
+
+services:
+  web:
+    image: python:3.12-slim
+    working_dir: /site
+    command: ["python3", "-m", "http.server", "3000", "--bind", "0.0.0.0"]
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./site:/site:ro
+    environment:
+      - BASE44_PREVIEW_MODE
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3000/').read()"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
