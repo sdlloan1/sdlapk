@@ -1,5 +1,5 @@
 // Read-only link to the Base44 app that powers the website.
-// Calls `<BASE44_API_URL>/entities/<Entity>` with an `api_key` header (see the SDL OpenAPI spec).
+// Calls `<BASE44_API_URL>/entities/<Entity>` with the Base44 personal access token as a Bearer header.
 
 const DEFAULT_API_URL = 'https://shubhdhanlakshmi-beta-version.base44.app/api';
 const REQUEST_TIMEOUT_MS = 10000;
@@ -93,7 +93,7 @@ export async function listRecords(key, limit = 8) {
   let response;
   try {
     response = await fetch(url, {
-      headers: { api_key: String(process.env.BASE44_API_KEY).trim() },
+      headers: { Authorization: `Bearer ${String(process.env.BASE44_API_KEY).trim()}` },
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });
   } catch {

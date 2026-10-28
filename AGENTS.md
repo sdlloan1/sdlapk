@@ -40,8 +40,9 @@ it into the adaptive-icon safe zone; without that inset Android's mask crops the
 ## Linked Base44 app (read-only)
 
 `server/src/base44.js` reads records straight from the Base44 app that backs the website at
-`BASE44_API_URL` (default `https://shubhdhanlakshmi-beta-version.base44.app/api`) using the
-`api_key` header from the SDL OpenAPI spec. `GET /api/admin/base44?source=loans|partners|tickets|withdrawals`
+`BASE44_API_URL` (default `https://shubhdhanlakshmi-beta-version.base44.app/api`) sending the
+key as `Authorization: Bearer <BASE44_API_KEY>`. The key is a Base44 personal access token — the
+OpenAPI spec's `api_key` header is rejected for it (401 InvalidAccessTokenError). `GET /api/admin/base44?source=loans|partners|tickets|withdrawals`
 (admin only) returns `{ linked, host, source, sources, rows }` shaped for the dashboard's
 "Linked Base44 app" card. Nothing is ever written back — keep it read-only.
 

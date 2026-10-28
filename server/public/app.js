@@ -315,6 +315,7 @@ async function loadBase44(source) {
     }
     select.value = data.source;
     list.innerHTML = '';
+    $('b44-hint').hidden = data.linked;
     if (!data.linked) {
       status.textContent = 'Not linked yet — add a Base44 API key secret named BASE44_API_KEY.';
       return;
