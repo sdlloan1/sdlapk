@@ -11,7 +11,7 @@
     },
     {
       "name": "ADMIN_PASSWORD",
-      "description": "Password for the admin dashboard. A development placeholder (admin123) is used until you set your own.",
+      "description": "Password for the admin dashboard sign-in. Set by the app owner; replaces the development placeholder.",
       "requiredAtBoot": false
     }
   ]
