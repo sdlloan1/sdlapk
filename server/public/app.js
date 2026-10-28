@@ -100,6 +100,13 @@ function segmentValue(groupId) {
   return active ? active.dataset.value : '';
 }
 
+/* ---------------- website link ---------------- */
+function siteAddress(config) {
+  const base = (config.appUrl || '').replace(/\/+$/, '');
+  const path = `/${(config.startPath || '/').replace(/^\/+/, '')}`;
+  return base ? `${base}${path}` : '';
+}
+
 /* ---------------- preview ---------------- */
 function renderPreview(play = false) {
   const config = readForm();
@@ -118,6 +125,10 @@ function renderPreview(play = false) {
 
   $('logo-thumb').src = src;
   $('logo-thumb').style.borderRadius = SHAPES[config.logo.shape] || SHAPES.rounded;
+
+  const siteUrl = siteAddress(config);
+  $('site-url').textContent = siteUrl;
+  $('open-site').href = siteUrl || '#';
 
   $('duration-label').textContent = `(${(config.splash.durationMs / 1000).toFixed(1)}s)`;
   $('offline-preview-title').textContent = config.offline.title;

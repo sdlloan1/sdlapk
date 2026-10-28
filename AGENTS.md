@@ -49,6 +49,11 @@ docker run --rm --user root -v "$PWD":/src -v /tmp/androidsdk:/sdk \
 
 - Dashboard: log in with the admin password, change a setting, press Save, then read it back
   from `GET /api/config` (that endpoint is what the app consumes).
+- The dashboard shows the packaged launcher icon on a mock home screen; its artwork is
+  `server/public/launcher-icon.png`, a copy of `app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png`
+  over the brand gradient — refresh the copy after changing the Android icon.
+- The target website sends `X-Frame-Options: DENY`, so it can never be shown in an iframe;
+  the dashboard's "Open website" link opens it in a new tab instead.
 - Android changes can only be checked in the packaged output:
   `aapt dump badging site/app-release.apk` (icon, portrait lock, versionCode).
 - Reset the stack with `docker compose -f docker-compose.base44.yml down` (keeps the
