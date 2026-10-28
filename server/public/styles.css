@@ -200,6 +200,25 @@ button { font: inherit; cursor: pointer; border-radius: 10px; border: 1px solid 
   margin-top: 12px;
 }
 .site-row #site-url { word-break: break-all; }
+.small-btn.on { background: #fdf3ef; border-color: #f6ded4; color: #8a4a33; }
+a.primary.small-btn {
+  display: inline-block;
+  padding: 7px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  color: #fff;
+}
+
+.site-frame {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #fff;
+}
+
 .site-row a.small-btn {
   display: inline-block;
   padding: 7px 12px;

@@ -161,6 +161,18 @@
       </section>
 
       <section class="card">
+        <h2>Android app (APK)</h2>
+        <p class="muted">The download button always serves the newest build published at <code>/download</code>.</p>
+        <label>Version shown to users
+          <input id="apkVersion" type="text" maxlength="24" placeholder="1.1">
+        </label>
+        <div class="site-row">
+          <a id="download-apk" class="primary small-btn" href="/download/app-release.apk" download="Shubh-Dhan-Lakshmi.apk">Download APK</a>
+          <span class="muted small">Latest build · Android 7.0+</span>
+        </div>
+      </section>
+
+      <section class="card">
         <h2>Connect the app</h2>
         <p class="muted">Point the Android build at this backend so the app picks up these settings.</p>
         <code class="endpoint" id="endpoint"></code>
@@ -173,12 +185,14 @@
       <div class="preview-head">
         <span class="muted small">Live preview</span>
         <div class="preview-actions">
-          <button id="replay" class="ghost small-btn" type="button">Replay launch</button>
+          <button id="view-launch" class="ghost small-btn on" type="button">Launch</button>
+          <button id="view-site" class="ghost small-btn" type="button">Website</button>
           <button id="toggle-offline" class="ghost small-btn" type="button">Offline</button>
         </div>
       </div>
       <div class="phone">
         <div class="phone-screen" id="phone-screen">
+          <iframe id="site-frame" class="site-frame" title="Website preview" hidden></iframe>
           <div class="splash" id="splash">
             <img id="splash-logo" class="splash-logo" alt="">
             <div class="progress" id="splash-progress"><span></span></div>

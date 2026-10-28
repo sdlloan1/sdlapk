@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import express from 'express';
 import { initDb, readConfig, writeConfig } from './db.js';
 import { normalizeConfig } from './defaults.js';
+import { sitePreview } from './proxy.js';
 import {
   checkPassword,
   clearAttempts,
@@ -26,7 +27,7 @@ app.get('/api/config', async (_req, res, next) => {
   try {
     const row = await readConfig();
     res.set('Cache-Control', 'no-store');
-    res.json({ config: row.config, updatedAt: row.updated_at });
+    res.json({ config: normalizeConfig(row.config), updatedAt: row.updated_at });
   } catch (err) {
     next(err);
   }
@@ -49,7 +50,7 @@ app.post('/api/admin/login', (req, res) => {
 app.get('/api/admin/config', requireAdmin, async (_req, res, next) => {
   try {
     const row = await readConfig();
-    res.json({ config: row.config, updatedAt: row.updated_at });
+    res.json({ config: normalizeConfig(row.config), updatedAt: row.updated_at });
   } catch (err) {
     next(err);
   }
@@ -65,7 +66,8 @@ app.put('/api/admin/config', requireAdmin, async (req, res, next) => {
   }
 });
 
-// --- static: dashboard at /, download page at /download ---
+// --- static: website snapshot for the preview, download page, dashboard ---
+app.use('/site-preview', sitePreview);
 app.use('/download', express.static(downloadDir, { maxAge: 0 }));
 app.use(express.static(dashboardDir, { maxAge: 0 }));
 

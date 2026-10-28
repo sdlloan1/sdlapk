@@ -15,6 +15,9 @@ export const DEFAULT_CONFIG = {
     showProgress: true,
     durationMs: 1500,
   },
+  apk: {
+    version: '1.1', // label shown on the download page and in the dashboard
+  },
   offline: {
     enabled: true,
     title: "You're offline",
@@ -52,6 +55,7 @@ export function normalizeConfig(input) {
   const logo = c.logo && typeof c.logo === 'object' ? c.logo : {};
   const splash = c.splash && typeof c.splash === 'object' ? c.splash : {};
   const offline = c.offline && typeof c.offline === 'object' ? c.offline : {};
+  const apk = c.apk && typeof c.apk === 'object' ? c.apk : {};
   const startPath = text(c.startPath, d.startPath, 200);
   const duration = Number(splash.durationMs);
 
@@ -71,6 +75,9 @@ export function normalizeConfig(input) {
       background: color(splash.background, d.splash.background),
       showProgress: flag(splash.showProgress, d.splash.showProgress),
       durationMs: Number.isFinite(duration) ? Math.min(Math.max(Math.round(duration), 0), 5000) : d.splash.durationMs,
+    },
+    apk: {
+      version: text(apk.version, d.apk.version, 24).trim() || d.apk.version,
     },
     offline: {
       enabled: flag(offline.enabled, d.offline.enabled),

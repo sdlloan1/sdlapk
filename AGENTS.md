@@ -52,8 +52,14 @@ docker run --rm --user root -v "$PWD":/src -v /tmp/androidsdk:/sdk \
 - The dashboard shows the packaged launcher icon on a mock home screen; its artwork is
   `server/public/launcher-icon.png`, a copy of `app/src/main/res/mipmap-xxxhdpi/ic_launcher_foreground.png`
   over the brand gradient — refresh the copy after changing the Android icon.
-- The target website sends `X-Frame-Options: DENY`, so it can never be shown in an iframe;
-  the dashboard's "Open website" link opens it in a new tab instead.
+- The target website sends `X-Frame-Options: DENY`, so it can never be framed directly.
+  `server/src/proxy.js` re-serves it at `/site-preview/` (absolute asset URLs rewritten,
+  `<base>` injected, and a tiny inline script that hides the proxy prefix from the site's
+  router) for the dashboard's "Website" view. Its JS runs on our origin, so its own API calls
+  land on this server — that is fine for a preview, but "Open website" is the real site.
+- `config.apk.version` is only a label: the dashboard and `/download` page show it next to the
+  "Download APK" link, which always serves the newest `site/app-release.apk`. To change the
+  Android version itself, edit `versionName`/`versionCode` in `app/build.gradle` and rebuild.
 - Android changes can only be checked in the packaged output:
   `aapt dump badging site/app-release.apk` (icon, portrait lock, versionCode).
 - Reset the stack with `docker compose -f docker-compose.base44.yml down` (keeps the

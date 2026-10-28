@@ -71,7 +71,7 @@
   <p class="tag">India&rsquo;s No. 1 friendly loan</p>
 
   <a class="btn" href="app-release.apk" download="Shubh-Dhan-Lakshmi.apk">Download APK</a>
-  <p class="meta">Free to install &middot; Android 7.0 and above</p>
+  <p class="meta">Version <span id="apk-version">1.1</span> &middot; Free to install &middot; Android 7.0 and above</p>
 
   <ol class="steps">
     <li>Tap <strong>Download APK</strong>.</li>
@@ -80,5 +80,15 @@
     <li>Open the app &mdash; it starts in full screen.</li>
   </ol>
 </main>
+<script>
+  // Version label comes from the dashboard so it stays in sync with the published build.
+  fetch('/api/config')
+    .then((res) => res.json())
+    .then((data) => {
+      const version = data.config && data.config.apk && data.config.apk.version;
+      if (version) document.getElementById('apk-version').textContent = version;
+    })
+    .catch(() => {});
+</script>
 </body>
 </html>

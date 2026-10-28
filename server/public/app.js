@@ -54,6 +54,7 @@ function fillForm(config) {
   $('splashBackground').value = config.splash.background;
   $('splashProgress').checked = config.splash.showProgress;
   $('splashDuration').value = config.splash.durationMs;
+  $('apkVersion').value = (config.apk && config.apk.version) || '';
   $('offlineEnabled').checked = config.offline.enabled;
   $('offlineTitle').value = config.offline.title;
   $('offlineMessage').value = config.offline.message;
@@ -78,6 +79,9 @@ function readForm() {
       background: $('splashBackground').value,
       showProgress: $('splashProgress').checked,
       durationMs: Number($('splashDuration').value),
+    },
+    apk: {
+      version: $('apkVersion').value.trim(),
     },
     offline: {
       enabled: $('offlineEnabled').checked,
@@ -135,7 +139,33 @@ function renderPreview(play = false) {
   $('offline-preview-message').textContent = config.offline.message;
   $('offline-preview-button').textContent = config.offline.buttonLabel || 'Retry';
 
-  if (play) playSplash();
+  if (viewMode === 'site') {
+    $('splash').hidden = true;
+    $('offline-view').hidden = true;
+  } else if (play) {
+    playSplash();
+  }
+}
+
+/* ---------------- launch / website view ---------------- */
+let viewMode = 'launch';
+
+function setView(mode) {
+  const frame = $('site-frame');
+  viewMode = mode;
+  if (mode === 'site') {
+    frame.src = `/site-preview/?t=${Date.now()}`;
+    frame.hidden = false;
+    $('splash').hidden = true;
+    $('offline-view').hidden = true;
+  } else {
+    frame.hidden = true;
+    frame.src = 'about:blank';
+    renderPreview();
+    playSplash();
+  }
+  $('view-launch').classList.toggle('on', mode === 'launch');
+  $('view-site').classList.toggle('on', mode === 'site');
 }
 
 function playSplash() {
@@ -228,8 +258,10 @@ async function boot() {
 
   $('save').addEventListener('click', save);
   $('logout').addEventListener('click', () => showLogin());
-  $('replay').addEventListener('click', playSplash);
+  $('view-launch').addEventListener('click', () => setView('launch'));
+  $('view-site').addEventListener('click', () => setView('site'));
   $('toggle-offline').addEventListener('click', () => {
+    if (viewMode === 'site') setView('launch');
     $('offline-view').hidden = !$('offline-view').hidden;
   });
 
