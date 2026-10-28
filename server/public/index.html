@@ -88,6 +88,9 @@
             <button type="button" data-value="contain">Show whole image</button>
           </div>
         </div>
+        <label>Logo size <span id="logo-size-label" class="muted small"></span>
+          <input id="logoSize" type="range" min="15" max="80" step="1">
+        </label>
       </section>
 
       <section class="card">
@@ -164,12 +167,32 @@
         <h2>Android app (APK)</h2>
         <p class="muted">The download button always serves the newest build published at <code>/download</code>.</p>
         <label>Version shown to users
-          <input id="apkVersion" type="text" maxlength="24" placeholder="1.1">
+          <input id="apkVersion" type="text" maxlength="24" placeholder="1.2">
         </label>
         <div class="site-row">
           <a id="download-apk" class="primary small-btn" href="/download/app-release.apk" download="Shubh-Dhan-Lakshmi.apk">Download APK</a>
           <span class="muted small">Latest build · Android 7.0+</span>
         </div>
+      </section>
+
+      <section class="card">
+        <h2>Notifications</h2>
+        <p class="muted">Send a message to every phone. It shows the next time the app opens.</p>
+        <label>Title
+          <input id="notifTitle" type="text" maxlength="80" placeholder="New update available">
+        </label>
+        <label>Message
+          <textarea id="notifMessage" rows="3" maxlength="300" placeholder="Download the latest version of the app."></textarea>
+        </label>
+        <label>Link (optional)
+          <input id="notifLink" type="url" placeholder="https://…">
+        </label>
+        <div class="site-row">
+          <button id="notif-send" class="primary small-btn" type="button">Send to all users</button>
+          <span id="notif-status" class="muted small"></span>
+        </div>
+        <p class="muted small">Changing the APK version above sends an update notification automatically.</p>
+        <ul id="notif-list" class="notif-list"></ul>
       </section>
 
       <section class="card">

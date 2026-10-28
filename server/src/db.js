@@ -26,6 +26,15 @@ export async function initDb() {
     'INSERT INTO app_config (id, config) VALUES (1, $1) ON CONFLICT (id) DO NOTHING',
     [JSON.stringify(DEFAULT_CONFIG)]
   );
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS notifications (
+      id serial PRIMARY KEY,
+      title text NOT NULL,
+      message text NOT NULL,
+      link text NOT NULL DEFAULT '',
+      created_at timestamptz NOT NULL DEFAULT now()
+    )
+  `);
 }
 
 export async function readConfig() {
@@ -39,6 +48,34 @@ export async function writeConfig(config) {
     [JSON.stringify(config)]
   );
   return rows[0];
+}
+
+export async function insertNotification({ title, message, link = '' }) {
+  const { rows } = await pool.query(
+    `INSERT INTO notifications (title, message, link) VALUES ($1, $2, $3)
+     RETURNING id, title, message, link, created_at`,
+    [title, message, link]
+  );
+  return rows[0];
+}
+
+/** Messages newer than the phone's last seen id, oldest first. */
+export async function notificationsAfter(id) {
+  const { rows } = await pool.query(
+    `SELECT id, title, message, link, created_at FROM notifications
+     WHERE id > $1 ORDER BY id ASC LIMIT 10`,
+    [id]
+  );
+  return rows;
+}
+
+export async function listNotifications(limit = 20) {
+  const { rows } = await pool.query(
+    `SELECT id, title, message, link, created_at FROM notifications
+     ORDER BY id DESC LIMIT $1`,
+    [limit]
+  );
+  return rows;
 }
 
 export async function closeDb() {

@@ -5,13 +5,14 @@ import org.json.JSONObject
 data class LogoConfig(
     val shape: String = "rounded",
     val fit: String = "cover",
+    val sizePercent: Int = 32,
     val imageUrl: String = ""
 )
 
 data class SplashConfig(
     val enabled: Boolean = true,
     val animation: String = "zoom",
-    val background: String = "#FF4D3D",
+    val background: String = "#FFFFFF",
     val showProgress: Boolean = true,
     val durationMs: Int = 1500
 )
@@ -46,6 +47,7 @@ data class AppConfig(
             JSONObject()
                 .put("shape", logo.shape)
                 .put("fit", logo.fit)
+                .put("sizePercent", logo.sizePercent)
                 .put("imageUrl", logo.imageUrl)
         )
         .put(
@@ -83,12 +85,13 @@ data class AppConfig(
                     logo = LogoConfig(
                         shape = logo.optString("shape", "rounded"),
                         fit = logo.optString("fit", "cover"),
+                        sizePercent = logo.optInt("sizePercent", 32).coerceIn(15, 80),
                         imageUrl = logo.optString("imageUrl", "")
                     ),
                     splash = SplashConfig(
                         enabled = splash.optBoolean("enabled", true),
                         animation = splash.optString("animation", "zoom"),
-                        background = splash.optString("background", "#FF4D3D"),
+                        background = splash.optString("background", "#FFFFFF"),
                         showProgress = splash.optBoolean("showProgress", true),
                         durationMs = splash.optInt("durationMs", 1500)
                     ),

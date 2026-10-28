@@ -6,17 +6,18 @@ export const DEFAULT_CONFIG = {
   logo: {
     shape: 'rounded', // rounded | circle | square
     fit: 'cover', // cover | contain
+    sizePercent: 32, // logo width on the launch screen, % of screen width
     imageUrl: '', // data URL uploaded from the dashboard; empty = bundled logo
   },
   splash: {
     enabled: true,
     animation: 'zoom', // none | fade | zoom | slide
-    background: '#FF4D3D',
+    background: '#FFFFFF',
     showProgress: true,
     durationMs: 1500,
   },
   apk: {
-    version: '1.1', // label shown on the download page and in the dashboard
+    version: '1.2', // label shown on the download page and in the dashboard
   },
   offline: {
     enabled: true,
@@ -65,6 +66,9 @@ export function normalizeConfig(input) {
     logo: {
       shape: pick(logo.shape, SHAPES, d.logo.shape),
       fit: pick(logo.fit, FITS, d.logo.fit),
+      sizePercent: Number.isFinite(Number(logo.sizePercent))
+        ? Math.min(Math.max(Math.round(Number(logo.sizePercent)), 15), 80)
+        : d.logo.sizePercent,
       imageUrl: typeof logo.imageUrl === 'string' && logo.imageUrl.length <= MAX_LOGO_CHARS
         ? logo.imageUrl
         : '',

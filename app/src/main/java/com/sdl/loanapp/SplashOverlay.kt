@@ -25,7 +25,8 @@ class SplashOverlay(
     private val logoView = ShapeImageView(context)
 
     init {
-        setBackgroundColor(parseColor(splashConfig.background, DEFAULT_BACKGROUND))
+        val background = parseColor(splashConfig.background, DEFAULT_BACKGROUND)
+        setBackgroundColor(background)
 
         content.orientation = LinearLayout.VERTICAL
         content.gravity = Gravity.CENTER
@@ -38,12 +39,16 @@ class SplashOverlay(
         )
 
         val density = context.resources.displayMetrics.density
-        val logoSize = minOf(context.resources.displayMetrics.widthPixels * 0.38f, 320f * density).toInt()
+        val width = context.resources.displayMetrics.widthPixels
+        val logoSize = minOf(width * logoConfig.sizePercent.coerceIn(15, 80) / 100f, 320f * density).toInt()
         content.addView(logoView, LinearLayout.LayoutParams(logoSize, logoSize))
 
         if (splashConfig.showProgress) {
+            val darkBackground = Color.luminance(background) < 0.5f
             val bar = ProgressBar(context).apply {
-                indeterminateTintList = ColorStateList.valueOf(Color.WHITE)
+                indeterminateTintList = ColorStateList.valueOf(
+                    if (darkBackground) Color.WHITE else BRAND
+                )
             }
             val params = LinearLayout.LayoutParams((36 * density).toInt(), (36 * density).toInt())
             params.topMargin = (28 * density).toInt()
@@ -107,6 +112,7 @@ class SplashOverlay(
     }
 
     private companion object {
-        val DEFAULT_BACKGROUND = Color.parseColor("#FF4D3D")
+        val DEFAULT_BACKGROUND = Color.parseColor("#FFFFFF")
+        val BRAND = Color.parseColor("#FF4D3D")
     }
 }

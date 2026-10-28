@@ -1,4 +1,5 @@
 <resources>
     <color name="brand">#FF4D3D</color>
     <color name="brand_light">#FF994A</color>
+    <color name="launch_background">#FFFFFF</color>
 </resources>

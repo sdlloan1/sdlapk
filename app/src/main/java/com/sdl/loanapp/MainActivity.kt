@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.ConnectivityManager
 import android.net.Network
@@ -35,6 +36,7 @@ class MainActivity : Activity() {
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
     private lateinit var configRepository: ConfigRepository
+    private lateinit var notificationCenter: NotificationCenter
 
     private var config = AppConfig()
     private var splash: SplashOverlay? = null
@@ -73,6 +75,9 @@ class MainActivity : Activity() {
 
         configRepository = ConfigRepository(this)
         config = configRepository.cached()
+        notificationCenter = NotificationCenter(this)
+        notificationCenter.ensureChannel()
+        requestNotificationPermission()
 
         root = FrameLayout(this)
 
@@ -120,7 +125,7 @@ class MainActivity : Activity() {
             mediaPlaybackRequiresUserGesture = false
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             cacheMode = WebSettings.LOAD_DEFAULT
-            userAgentString = "$userAgentString SDLAndroidApp/1.1"
+            userAgentString = "$userAgentString SDLAndroidApp/1.2"
         }
 
         CookieManager.getInstance().apply {
@@ -190,6 +195,7 @@ class MainActivity : Activity() {
     private fun loadConfigThenStart() {
         Thread {
             val fresh = configRepository.fetchRemote()
+            notificationCenter.fetchAndShow()
             runOnUiThread {
                 if (fresh != null) {
                     config = fresh
@@ -199,6 +205,12 @@ class MainActivity : Activity() {
                 if (splash != null) root.postDelayed({ hideSplash() }, SPLASH_TIMEOUT_MS)
             }
         }.start()
+    }
+
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) return
+        requestPermissions(arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), NOTIFICATION_REQ)
     }
 
     private fun showSplash(settings: AppConfig) {
@@ -307,6 +319,7 @@ class MainActivity : Activity() {
 
     companion object {
         private const val FILE_CHOOSER_REQ = 1001
+        private const val NOTIFICATION_REQ = 1002
         private const val SPLASH_TIMEOUT_MS = 6000L
     }
 }

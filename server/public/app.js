@@ -6,6 +6,16 @@ const state = {
 
 const SHAPES = { rounded: '22%', circle: '50%', square: '0%' };
 
+/** Luminance check so the progress bar stays visible on light or dark backgrounds. */
+function isLight(hex) {
+  const value = String(hex || '').replace('#', '');
+  if (value.length !== 6) return true;
+  const r = parseInt(value.slice(0, 2), 16);
+  const g = parseInt(value.slice(2, 4), 16);
+  const b = parseInt(value.slice(4, 6), 16);
+  return 0.299 * r + 0.587 * g + 0.114 * b > 150;
+}
+
 /* ---------------- API ---------------- */
 async function api(path, options = {}) {
   const res = await fetch(path, {
@@ -61,6 +71,7 @@ function fillForm(config) {
   $('offlineButtonLabel').value = config.offline.buttonLabel;
   setSegment('logo-shape', config.logo.shape);
   setSegment('logo-fit', config.logo.fit);
+  $('logoSize').value = config.logo.sizePercent;
   renderPreview();
 }
 
@@ -71,6 +82,7 @@ function readForm() {
     logo: {
       shape: segmentValue('logo-shape'),
       fit: segmentValue('logo-fit'),
+      sizePercent: Number($('logoSize').value),
       imageUrl: state.config ? state.config.logo.imageUrl : '',
     },
     splash: {
@@ -122,9 +134,15 @@ function renderPreview(play = false) {
   if (logo.getAttribute('src') !== src) logo.setAttribute('src', src);
   logo.style.borderRadius = SHAPES[config.logo.shape] || SHAPES.rounded;
   logo.style.objectFit = config.logo.fit;
+  logo.style.width = `${config.logo.sizePercent}%`;
+  $('logo-size-label').textContent = `(${config.logo.sizePercent}% of screen width)`;
 
   splash.style.background = config.splash.background;
-  $('splash-progress').hidden = !config.splash.showProgress;
+  const bar = $('splash-progress');
+  const lightBackground = isLight(config.splash.background);
+  bar.style.background = lightBackground ? 'rgba(0, 0, 0, .12)' : 'rgba(255, 255, 255, .35)';
+  bar.firstElementChild.style.background = lightBackground ? '#FF4D3D' : '#fff';
+  bar.hidden = !config.splash.showProgress;
   $('splash').hidden = !config.splash.enabled;
 
   $('logo-thumb').src = src;
@@ -229,6 +247,59 @@ async function handleLogoFile(file) {
   setStatus('Logo updated — press Save', true);
 }
 
+/* ---------------- notifications ---------------- */
+async function loadNotifications() {
+  const list = $('notif-list');
+  try {
+    const data = await api('/api/admin/notifications');
+    list.innerHTML = '';
+    if (!data.notifications.length) {
+      list.innerHTML = '<li class="muted small">Nothing sent yet.</li>';
+      return;
+    }
+    data.notifications.forEach((item) => {
+      const li = document.createElement('li');
+      const title = document.createElement('strong');
+      title.textContent = item.title;
+      const meta = document.createElement('span');
+      meta.className = 'muted small';
+      meta.textContent = `${new Date(item.created_at).toLocaleString()} · ${item.message}`;
+      li.append(title, meta);
+      list.appendChild(li);
+    });
+  } catch (err) {
+    list.innerHTML = '<li class="muted small">Could not load sent messages.</li>';
+  }
+}
+
+async function sendNotification() {
+  const button = $('notif-send');
+  const title = $('notifTitle').value.trim();
+  const message = $('notifMessage').value.trim();
+  const link = $('notifLink').value.trim();
+  if (!title || !message) {
+    setStatus('Add a notification title and message', true);
+    return;
+  }
+  button.disabled = true;
+  try {
+    await api('/api/admin/notifications', {
+      method: 'POST',
+      body: JSON.stringify({ title, message, link }),
+    });
+    $('notifTitle').value = '';
+    $('notifMessage').value = '';
+    $('notifLink').value = '';
+    $('notif-status').textContent = 'Sent';
+    setStatus('Notification sent');
+    await loadNotifications();
+  } catch (err) {
+    setStatus(err.message || 'Could not send', true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
 /* ---------------- boot ---------------- */
 async function loadConfig() {
   const data = await api('/api/admin/config');
@@ -236,6 +307,7 @@ async function loadConfig() {
   showSaved(data.updatedAt);
   showPanel();
   playSplash();
+  loadNotifications();
 }
 
 async function boot() {
@@ -257,6 +329,7 @@ async function boot() {
   });
 
   $('save').addEventListener('click', save);
+  $('notif-send').addEventListener('click', sendNotification);
   $('logout').addEventListener('click', () => showLogin());
   $('view-launch').addEventListener('click', () => setView('launch'));
   $('view-site').addEventListener('click', () => setView('site'));
