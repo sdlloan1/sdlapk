@@ -1,20 +1,52 @@
-name: sdl-apk
+name: sdl-app
 
 services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: sdl
+      POSTGRES_PASSWORD: sdl_local_dev
+      POSTGRES_DB: sdl
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: on-failure
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sdl -d sdl"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   web:
-    image: python:3.12-slim
-    working_dir: /site
-    command: ["python3", "-m", "http.server", "3000", "--bind", "0.0.0.0"]
+    image: node:22
+    working_dir: /app
+    command: ["sh", "-ec", "npm install --no-audit --no-fund && exec node --watch src/index.js"]
     ports:
       - "3000:3000"
     volumes:
+      - ./server:/app
+      - /app/node_modules
       - ./site:/site:ro
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
     environment:
+      - DATABASE_URL=postgres://sdl:sdl_local_dev@db:5432/sdl
+      - PORT=3000
       - BASE44_PREVIEW_MODE
+    depends_on:
+      db:
+        condition: service_healthy
     restart: on-failure
     healthcheck:
-      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3000/').read()"]
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/config').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 10s
-      timeout: 3s
+      timeout: 5s
       retries: 5
-      start_period: 5s
+      start_period: 40s
+    labels:
+      base44.project: "SDL Admin"
+      base44.kind: web
+      base44.port: 3000
+
+volumes:
+  pgdata:

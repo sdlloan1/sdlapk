@@ -2,5 +2,17 @@
   "previewPort": 3000,
   "healthPath": "/",
   "startCommand": "docker compose -f docker-compose.base44.yml up -d",
-  "secrets": []
+  "secrets": [
+    {
+      "name": "SESSION_SECRET",
+      "description": "Signs dashboard login sessions.",
+      "requiredAtBoot": true,
+      "generatedForDevelopment": true
+    },
+    {
+      "name": "ADMIN_PASSWORD",
+      "description": "Password for the admin dashboard. A development placeholder (admin123) is used until you set your own.",
+      "requiredAtBoot": false
+    }
+  ]
 }

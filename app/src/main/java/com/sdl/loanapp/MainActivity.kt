@@ -2,34 +2,64 @@ package com.sdl.loanapp
 
 import android.annotation.SuppressLint
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.SystemClock
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import android.webkit.CookieManager
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import android.widget.ProgressBar
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 class MainActivity : Activity() {
 
+    private lateinit var root: FrameLayout
     private lateinit var webView: WebView
     private lateinit var progressBar: ProgressBar
+    private lateinit var configRepository: ConfigRepository
+
+    private var config = AppConfig()
+    private var splash: SplashOverlay? = null
+    private var splashShownAt = 0L
+    private var pageFinished = false
+    private var offlineView: OfflineOverlay? = null
     private var fileChooserCallback: ValueCallback<Array<Uri>>? = null
 
-    private val startUrl = "https://shubhdhanlakshmi-beta-version.base44.app"
+    private val connectivity: ConnectivityManager by lazy {
+        getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    }
+
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            runOnUiThread {
+                val wasOffline = offlineView != null
+                hideOffline()
+                if (wasOffline) webView.loadUrl(config.startUrl)
+            }
+        }
+
+        override fun onLost(network: Network) {
+            runOnUiThread { showOfflineIfEnabled() }
+        }
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -41,7 +71,10 @@ class MainActivity : Activity() {
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
         }
 
-        val root = FrameLayout(this)
+        configRepository = ConfigRepository(this)
+        config = configRepository.cached()
+
+        root = FrameLayout(this)
 
         webView = WebView(this)
         root.addView(webView, FrameLayout.LayoutParams(
@@ -59,6 +92,21 @@ class MainActivity : Activity() {
 
         setContentView(root)
 
+        configureWebView()
+        configureWebViewClient()
+        configureWebChromeClient()
+
+        if (savedInstanceState != null) {
+            webView.restoreState(savedInstanceState)
+            pageFinished = true
+        } else {
+            if (config.splash.enabled) showSplash(config)
+            loadConfigThenStart()
+        }
+    }
+
+    @SuppressLint("SetJavaScriptEnabled")
+    private fun configureWebView() {
         with(webView.settings) {
             javaScriptEnabled = true
             domStorageEnabled = true
@@ -72,14 +120,16 @@ class MainActivity : Activity() {
             mediaPlaybackRequiresUserGesture = false
             mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             cacheMode = WebSettings.LOAD_DEFAULT
-            userAgentString = "$userAgentString SDLAndroidApp/1.0"
+            userAgentString = "$userAgentString SDLAndroidApp/1.1"
         }
 
         CookieManager.getInstance().apply {
             setAcceptCookie(true)
             setAcceptThirdPartyCookies(webView, true)
         }
+    }
 
+    private fun configureWebViewClient() {
         webView.webViewClient = object : WebViewClient() {
             override fun shouldOverrideUrlLoading(view: WebView, req: WebResourceRequest): Boolean {
                 val url = req.url
@@ -91,14 +141,27 @@ class MainActivity : Activity() {
 
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 progressBar.visibility = View.VISIBLE
+                hideOffline()
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 progressBar.visibility = View.GONE
                 goImmersive()
+                pageFinished = true
+                scheduleSplashHide()
+            }
+
+            override fun onReceivedError(
+                view: WebView,
+                request: WebResourceRequest,
+                error: WebResourceError
+            ) {
+                if (request.isForMainFrame && !hasNetwork()) showOfflineIfEnabled()
             }
         }
+    }
 
+    private fun configureWebChromeClient() {
         webView.webChromeClient = object : WebChromeClient() {
             override fun onProgressChanged(view: WebView?, newProgress: Int) {
                 progressBar.progress = newProgress
@@ -121,9 +184,72 @@ class MainActivity : Activity() {
                 }
             }
         }
+    }
 
-        if (savedInstanceState == null) webView.loadUrl(startUrl)
-        else webView.restoreState(savedInstanceState)
+    /** Fetch the dashboard settings (short timeout), then open the configured first page. */
+    private fun loadConfigThenStart() {
+        Thread {
+            val fresh = configRepository.fetchRemote()
+            runOnUiThread {
+                if (fresh != null) {
+                    config = fresh
+                    if (!fresh.splash.enabled) hideSplash()
+                }
+                webView.loadUrl(config.startUrl)
+                if (splash != null) root.postDelayed({ hideSplash() }, SPLASH_TIMEOUT_MS)
+            }
+        }.start()
+    }
+
+    private fun showSplash(settings: AppConfig) {
+        val overlay = SplashOverlay(this, settings.splash, settings.logo)
+        splash = overlay
+        splashShownAt = SystemClock.elapsedRealtime()
+        root.addView(overlay, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+        overlay.playIntro()
+    }
+
+    private fun scheduleSplashHide() {
+        if (splash == null) return
+        val remaining = config.splash.durationMs - (SystemClock.elapsedRealtime() - splashShownAt)
+        if (remaining <= 0) hideSplash()
+        else root.postDelayed({
+            if (pageFinished) hideSplash()
+        }, remaining)
+    }
+
+    private fun hideSplash() {
+        val overlay = splash ?: return
+        splash = null
+        overlay.dismiss()
+    }
+
+    private fun showOfflineIfEnabled() {
+        if (!config.offline.enabled || offlineView != null) return
+        hideSplash()
+        val overlay = OfflineOverlay(this, config.offline) {
+            hideOffline()
+            webView.loadUrl(config.startUrl)
+        }
+        offlineView = overlay
+        root.addView(overlay, FrameLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.MATCH_PARENT
+        ))
+    }
+
+    private fun hideOffline() {
+        offlineView?.let { root.removeView(it) }
+        offlineView = null
+    }
+
+    private fun hasNetwork(): Boolean {
+        val network = connectivity.activeNetwork ?: return false
+        val capabilities = connectivity.getNetworkCapabilities(network) ?: return false
+        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     private fun goImmersive() {
@@ -132,6 +258,25 @@ class MainActivity : Activity() {
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
             hide(WindowInsetsCompat.Type.systemBars())
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        try {
+            connectivity.registerDefaultNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+            // Already registered or unavailable on this device.
+        }
+        if (!hasNetwork()) showOfflineIfEnabled()
+    }
+
+    override fun onStop() {
+        try {
+            connectivity.unregisterNetworkCallback(networkCallback)
+        } catch (e: Exception) {
+            // Not registered.
+        }
+        super.onStop()
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
@@ -160,5 +305,8 @@ class MainActivity : Activity() {
         webView.saveState(outState)
     }
 
-    companion object { private const val FILE_CHOOSER_REQ = 1001 }
+    companion object {
+        private const val FILE_CHOOSER_REQ = 1001
+        private const val SPLASH_TIMEOUT_MS = 6000L
+    }
 }

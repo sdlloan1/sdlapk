@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SDL Control Panel</title>
+<meta name="theme-color" content="#FF4D3D">
+<link rel="icon" href="/logo.png">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+
+<section id="login" class="login hidden">
+  <form id="login-form" class="login-card">
+    <img src="/logo.png" alt="" class="login-logo">
+    <h1>SDL Control Panel</h1>
+    <p class="muted">Sign in to configure the app.</p>
+    <input id="login-password" type="password" placeholder="Admin password" autocomplete="current-password" required>
+    <button type="submit" class="primary">Sign in</button>
+    <p id="login-error" class="error" hidden></p>
+  </form>
+</section>
+
+<div id="panel" class="shell hidden">
+  <header class="topbar">
+    <div class="brand">
+      <img src="/logo.png" alt="" class="brand-mark">
+      <div>
+        <strong>SDL Control Panel</strong>
+        <span id="saved-at" class="muted small">Not saved yet</span>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span id="status" class="status" hidden></span>
+      <button id="logout" class="ghost" type="button">Sign out</button>
+      <button id="save" class="primary" type="button">Save changes</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <form id="form" class="settings" autocomplete="off">
+
+      <section class="card">
+        <h2>Start screen</h2>
+        <p class="muted">Which page opens when the app launches.</p>
+        <label>Website address
+          <input id="appUrl" type="url" placeholder="https://example.com">
+        </label>
+        <label>First page
+          <input id="startPath" type="text" placeholder="/">
+        </label>
+        <div class="chips" id="path-chips">
+          <button type="button" data-path="/">Home</button>
+          <button type="button" data-path="/dashboard">Dashboard</button>
+          <button type="button" data-path="/loans">Loans</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>App logo</h2>
+        <p class="muted">The logo on the launch screen. The phone icon keeps using the packaged artwork.</p>
+        <div class="logo-row">
+          <img id="logo-thumb" class="logo-thumb" alt="">
+          <div class="logo-actions">
+            <label class="file-button">
+              Upload image
+              <input id="logo-file" type="file" accept="image/png,image/jpeg,image/webp">
+            </label>
+            <button id="logo-reset" class="ghost" type="button">Use packaged logo</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="field-label">Shape</span>
+          <div class="segmented" id="logo-shape" role="radiogroup" aria-label="Logo shape">
+            <button type="button" data-value="rounded">Rounded</button>
+            <button type="button" data-value="circle">Round</button>
+            <button type="button" data-value="square">Square</button>
+          </div>
+        </div>
+        <div class="field">
+          <span class="field-label">Fit</span>
+          <div class="segmented" id="logo-fit" role="radiogroup" aria-label="Logo fit">
+            <button type="button" data-value="cover">Crop to fill</button>
+            <button type="button" data-value="contain">Show whole image</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Launch screen</h2>
+        <p class="muted">What the user sees while the app loads.</p>
+        <label class="switch-row">
+          <span>Show loading screen</span>
+          <input id="splashEnabled" type="checkbox" class="switch">
+        </label>
+        <label>Animation
+          <select id="splashAnimation">
+            <option value="none">None</option>
+            <option value="fade">Fade in</option>
+            <option value="zoom">Zoom in</option>
+            <option value="slide">Slide up</option>
+          </select>
+        </label>
+        <label>Background colour
+          <input id="splashBackground" type="color">
+        </label>
+        <label class="switch-row">
+          <span>Show progress bar</span>
+          <input id="splashProgress" type="checkbox" class="switch">
+        </label>
+        <label>Minimum time on screen <span id="duration-label" class="muted small"></span>
+          <input id="splashDuration" type="range" min="0" max="5000" step="250">
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>Offline screen</h2>
+        <p class="muted">Shown when the device loses its internet connection.</p>
+        <label class="switch-row">
+          <span>Show offline screen</span>
+          <input id="offlineEnabled" type="checkbox" class="switch">
+        </label>
+        <label>Title
+          <input id="offlineTitle" type="text" maxlength="60">
+        </label>
+        <label>Message
+          <textarea id="offlineMessage" rows="2" maxlength="200"></textarea>
+        </label>
+        <label>Button label
+          <input id="offlineButtonLabel" type="text" maxlength="24">
+        </label>
+      </section>
+
+      <section class="card">
+        <h2>Connect the app</h2>
+        <p class="muted">Point the Android build at this backend so the app picks up these settings.</p>
+        <code class="endpoint" id="endpoint"></code>
+        <p class="muted small">Set <code>SDL_CONFIG_API</code> in <code>gradle.properties</code> to the public URL of this service, then rebuild the APK. Changes reach phones on their next launch.</p>
+      </section>
+
+    </form>
+
+    <aside class="preview">
+      <div class="preview-head">
+        <span class="muted small">Live preview</span>
+        <div class="preview-actions">
+          <button id="replay" class="ghost small-btn" type="button">Replay launch</button>
+          <button id="toggle-offline" class="ghost small-btn" type="button">Offline</button>
+        </div>
+      </div>
+      <div class="phone">
+        <div class="phone-screen" id="phone-screen">
+          <div class="splash" id="splash">
+            <img id="splash-logo" class="splash-logo" alt="">
+            <div class="progress" id="splash-progress"><span></span></div>
+          </div>
+          <div class="offline" id="offline-view" hidden>
+            <div class="offline-icon">!</div>
+            <h3 id="offline-preview-title"></h3>
+            <p id="offline-preview-message"></p>
+            <span class="offline-button" id="offline-preview-button"></span>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script src="/app.js"></script>
+</body>
+</html>

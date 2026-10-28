@@ -1,0 +1,257 @@
+const $ = (id) => document.getElementById(id);
+const state = {
+  token: localStorage.getItem('sdl_admin_token') || '',
+  config: null,
+};
+
+const SHAPES = { rounded: '22%', circle: '50%', square: '0%' };
+
+/* ---------------- API ---------------- */
+async function api(path, options = {}) {
+  const res = await fetch(path, {
+    ...options,
+    headers: {
+      'content-type': 'application/json',
+      ...(state.token ? { authorization: `Bearer ${state.token}` } : {}),
+      ...(options.headers || {}),
+    },
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (res.status === 401 && path !== '/api/admin/login') {
+      showLogin('Your session ended. Sign in again.');
+    }
+    throw new Error(data.error || 'Request failed');
+  }
+  return data;
+}
+
+/* ---------------- screens ---------------- */
+function showLogin(message) {
+  state.token = '';
+  localStorage.removeItem('sdl_admin_token');
+  $('login').classList.remove('hidden');
+  $('panel').classList.add('hidden');
+  const error = $('login-error');
+  error.hidden = !message;
+  error.textContent = message || '';
+  $('login-password').focus();
+}
+
+function showPanel() {
+  $('login').classList.add('hidden');
+  $('panel').classList.remove('hidden');
+  $('endpoint').textContent = `${location.origin}  (GET /api/config)`;
+}
+
+/* ---------------- form <-> config ---------------- */
+function fillForm(config) {
+  state.config = config;
+  $('appUrl').value = config.appUrl;
+  $('startPath').value = config.startPath;
+  $('splashEnabled').checked = config.splash.enabled;
+  $('splashAnimation').value = config.splash.animation;
+  $('splashBackground').value = config.splash.background;
+  $('splashProgress').checked = config.splash.showProgress;
+  $('splashDuration').value = config.splash.durationMs;
+  $('offlineEnabled').checked = config.offline.enabled;
+  $('offlineTitle').value = config.offline.title;
+  $('offlineMessage').value = config.offline.message;
+  $('offlineButtonLabel').value = config.offline.buttonLabel;
+  setSegment('logo-shape', config.logo.shape);
+  setSegment('logo-fit', config.logo.fit);
+  renderPreview();
+}
+
+function readForm() {
+  return {
+    appUrl: $('appUrl').value.trim(),
+    startPath: $('startPath').value.trim() || '/',
+    logo: {
+      shape: segmentValue('logo-shape'),
+      fit: segmentValue('logo-fit'),
+      imageUrl: state.config ? state.config.logo.imageUrl : '',
+    },
+    splash: {
+      enabled: $('splashEnabled').checked,
+      animation: $('splashAnimation').value,
+      background: $('splashBackground').value,
+      showProgress: $('splashProgress').checked,
+      durationMs: Number($('splashDuration').value),
+    },
+    offline: {
+      enabled: $('offlineEnabled').checked,
+      title: $('offlineTitle').value.trim(),
+      message: $('offlineMessage').value.trim(),
+      buttonLabel: $('offlineButtonLabel').value.trim(),
+    },
+  };
+}
+
+function setSegment(groupId, value) {
+  document.querySelectorAll(`#${groupId} button`).forEach((btn) => {
+    btn.classList.toggle('on', btn.dataset.value === value);
+    btn.setAttribute('aria-checked', String(btn.dataset.value === value));
+  });
+}
+
+function segmentValue(groupId) {
+  const active = document.querySelector(`#${groupId} button.on`);
+  return active ? active.dataset.value : '';
+}
+
+/* ---------------- preview ---------------- */
+function renderPreview(play = false) {
+  const config = readForm();
+  state.config = config;
+
+  const splash = $('splash');
+  const logo = $('splash-logo');
+  const src = config.logo.imageUrl || '/logo.png';
+  if (logo.getAttribute('src') !== src) logo.setAttribute('src', src);
+  logo.style.borderRadius = SHAPES[config.logo.shape] || SHAPES.rounded;
+  logo.style.objectFit = config.logo.fit;
+
+  splash.style.background = config.splash.background;
+  $('splash-progress').hidden = !config.splash.showProgress;
+  $('splash').hidden = !config.splash.enabled;
+
+  $('logo-thumb').src = src;
+  $('logo-thumb').style.borderRadius = SHAPES[config.logo.shape] || SHAPES.rounded;
+
+  $('duration-label').textContent = `(${(config.splash.durationMs / 1000).toFixed(1)}s)`;
+  $('offline-preview-title').textContent = config.offline.title;
+  $('offline-preview-message').textContent = config.offline.message;
+  $('offline-preview-button').textContent = config.offline.buttonLabel || 'Retry';
+
+  if (play) playSplash();
+}
+
+function playSplash() {
+  const splash = $('splash');
+  const animation = $('splashAnimation').value;
+  splash.classList.remove('anim-fade', 'anim-zoom', 'anim-slide');
+  void splash.offsetWidth; // restart the animation
+  if (animation !== 'none') splash.classList.add(`anim-${animation}`);
+}
+
+/* ---------------- save ---------------- */
+function setStatus(text, bad = false) {
+  const status = $('status');
+  status.textContent = text;
+  status.classList.toggle('bad', bad);
+  status.hidden = false;
+  clearTimeout(setStatus.timer);
+  setStatus.timer = setTimeout(() => { status.hidden = true; }, 4000);
+}
+
+function showSaved(updatedAt) {
+  const when = updatedAt ? new Date(updatedAt) : new Date();
+  $('saved-at').textContent = `Saved ${when.toLocaleString()}`;
+}
+
+async function save() {
+  const button = $('save');
+  button.disabled = true;
+  try {
+    const data = await api('/api/admin/config', {
+      method: 'PUT',
+      body: JSON.stringify({ config: readForm() }),
+    });
+    fillForm(data.config);
+    showSaved(data.updatedAt);
+    setStatus('Saved');
+  } catch (err) {
+    setStatus(err.message || 'Could not save', true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+/* ---------------- logo upload ---------------- */
+async function handleLogoFile(file) {
+  if (!file) return;
+  const bitmap = await createImageBitmap(file);
+  const max = 512;
+  const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  const dataUrl = canvas.toDataURL('image/png');
+  if (dataUrl.length > 600000) {
+    setStatus('That image is too large — use one under 400 KB.', true);
+    return;
+  }
+  state.config.logo.imageUrl = dataUrl;
+  renderPreview(true);
+  setStatus('Logo updated — press Save', true);
+}
+
+/* ---------------- boot ---------------- */
+async function loadConfig() {
+  const data = await api('/api/admin/config');
+  fillForm(data.config);
+  showSaved(data.updatedAt);
+  showPanel();
+  playSplash();
+}
+
+async function boot() {
+  $('login-form').addEventListener('submit', async (event) => {
+    event.preventDefault();
+    $('login-error').hidden = true;
+    try {
+      const data = await api('/api/admin/login', {
+        method: 'POST',
+        body: JSON.stringify({ password: $('login-password').value }),
+      });
+      state.token = data.token;
+      localStorage.setItem('sdl_admin_token', data.token);
+      $('login-password').value = '';
+      await loadConfig();
+    } catch (err) {
+      showLogin(err.message);
+    }
+  });
+
+  $('save').addEventListener('click', save);
+  $('logout').addEventListener('click', () => showLogin());
+  $('replay').addEventListener('click', playSplash);
+  $('toggle-offline').addEventListener('click', () => {
+    $('offline-view').hidden = !$('offline-view').hidden;
+  });
+
+  document.querySelectorAll('#logo-shape button, #logo-fit button').forEach((button) => {
+    button.addEventListener('click', () => {
+      setSegment(button.parentElement.id, button.dataset.value);
+      renderPreview();
+    });
+  });
+
+  document.querySelectorAll('#path-chips button').forEach((button) => {
+    button.addEventListener('click', () => {
+      $('startPath').value = button.dataset.path;
+      renderPreview();
+    });
+  });
+
+  $('logo-file').addEventListener('change', (event) => handleLogoFile(event.target.files[0]));
+  $('logo-reset').addEventListener('click', () => {
+    state.config.logo.imageUrl = '';
+    renderPreview();
+  });
+
+  $('form').addEventListener('input', () => renderPreview());
+  $('form').addEventListener('change', () => renderPreview());
+  $('splashAnimation').addEventListener('change', () => renderPreview(true));
+
+  if (!state.token) return showLogin();
+  try {
+    await loadConfig();
+  } catch (err) {
+    showLogin(err.message);
+  }
+}
+
+boot();
