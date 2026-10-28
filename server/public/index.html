@@ -196,6 +196,22 @@
       </section>
 
       <section class="card">
+        <h2>Linked Base44 app</h2>
+        <p class="muted">Live, read-only data from the website app.</p>
+        <p id="b44-status" class="muted small">Checking…</p>
+        <label>Data source
+          <select id="b44-source">
+            <option value="loans">Loan applications</option>
+          </select>
+        </label>
+        <div class="site-row">
+          <button id="b44-refresh" class="ghost small-btn" type="button">Refresh</button>
+          <span class="muted small">Set the <code>BASE44_API_KEY</code> secret to link this dashboard to your Base44 app.</span>
+        </div>
+        <ul id="b44-list" class="notif-list"></ul>
+      </section>
+
+      <section class="card">
         <h2>Connect the app</h2>
         <p class="muted">Point the Android build at this backend so the app picks up these settings.</p>
         <code class="endpoint" id="endpoint"></code>

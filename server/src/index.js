@@ -4,6 +4,7 @@ import express from 'express';
 import { initDb, insertNotification, listNotifications, notificationsAfter, readConfig, writeConfig } from './db.js';
 import { normalizeConfig } from './defaults.js';
 import { sitePreview } from './proxy.js';
+import { host as base44Host, listRecords, listSources } from './base44.js';
 import {
   checkPassword,
   clearAttempts,
@@ -109,6 +110,17 @@ app.post('/api/admin/notifications', requireAdmin, async (req, res, next) => {
     });
     res.json({ notification });
   } catch (err) {
+    next(err);
+  }
+});
+
+// --- linked Base44 app (read-only) ---
+app.get('/api/admin/base44', requireAdmin, async (req, res, next) => {
+  try {
+    const data = await listRecords(String(req.query.source || ''), 8);
+    res.json({ ...data, host: base44Host(), sources: listSources() });
+  } catch (err) {
+    if (err.status) return res.status(err.status).json({ error: err.message });
     next(err);
   }
 });

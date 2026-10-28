@@ -37,6 +37,17 @@ it into the adaptive-icon safe zone; without that inset Android's mask crops the
   `admin123` development placeholder in `.env.base44-defaults`). To change it, update the secret;
   the web service is recreated automatically, no code change needed.
 
+## Linked Base44 app (read-only)
+
+`server/src/base44.js` reads records straight from the Base44 app that backs the website at
+`BASE44_API_URL` (default `https://shubhdhanlakshmi-beta-version.base44.app/api`) using the
+`api_key` header from the SDL OpenAPI spec. `GET /api/admin/base44?source=loans|partners|tickets|withdrawals`
+(admin only) returns `{ linked, host, source, sources, rows }` shaped for the dashboard's
+"Linked Base44 app" card. Nothing is ever written back — keep it read-only.
+
+`BASE44_API_KEY` is an **optional** secret: without it the card shows "Not linked yet" and no
+request leaves the server. Add it from the Base44 app's API key settings.
+
 ## Rebuilding the downloadable APK
 
 `site/app-release.apk` is a committed build artifact. After changing Android code:

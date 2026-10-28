@@ -300,6 +300,46 @@ async function sendNotification() {
   }
 }
 
+/* ---------------- linked Base44 app ---------------- */
+async function loadBase44(source) {
+  const status = $('b44-status');
+  const list = $('b44-list');
+  const select = $('b44-source');
+  status.classList.remove('error');
+  status.textContent = 'Loading…';
+  try {
+    const data = await api(`/api/admin/base44?source=${encodeURIComponent(source || '')}`);
+    if (select.options.length !== data.sources.length) {
+      select.innerHTML = '';
+      data.sources.forEach((item) => select.add(new Option(item.label, item.key)));
+    }
+    select.value = data.source;
+    list.innerHTML = '';
+    if (!data.linked) {
+      status.textContent = 'Not linked yet — add a Base44 API key secret named BASE44_API_KEY.';
+      return;
+    }
+    status.textContent = `Linked to ${data.host} · read-only`;
+    if (!data.rows.length) {
+      list.innerHTML = '<li class="muted small">No records yet.</li>';
+      return;
+    }
+    data.rows.forEach((row) => {
+      const li = document.createElement('li');
+      const title = document.createElement('strong');
+      title.textContent = row.title;
+      const meta = document.createElement('span');
+      meta.className = 'muted small';
+      meta.textContent = row.meta;
+      li.append(title, meta);
+      list.appendChild(li);
+    });
+  } catch (err) {
+    status.classList.add('error');
+    status.textContent = err.message || 'Could not reach your Base44 app.';
+  }
+}
+
 /* ---------------- boot ---------------- */
 async function loadConfig() {
   const data = await api('/api/admin/config');
@@ -308,6 +348,7 @@ async function loadConfig() {
   showPanel();
   playSplash();
   loadNotifications();
+  loadBase44('loans');
 }
 
 async function boot() {
@@ -330,6 +371,8 @@ async function boot() {
 
   $('save').addEventListener('click', save);
   $('notif-send').addEventListener('click', sendNotification);
+  $('b44-refresh').addEventListener('click', () => loadBase44($('b44-source').value));
+  $('b44-source').addEventListener('change', () => loadBase44($('b44-source').value));
   $('logout').addEventListener('click', () => showLogin());
   $('view-launch').addEventListener('click', () => setView('launch'));
   $('view-site').addEventListener('click', () => setView('site'));

@@ -13,6 +13,11 @@
       "name": "ADMIN_PASSWORD",
       "description": "Password for the admin dashboard sign-in. Set by the app owner; replaces the development placeholder.",
       "requiredAtBoot": false
+    },
+    {
+      "name": "BASE44_API_KEY",
+      "description": "API key of the Shubh Dhan Lakshmi Base44 app, used by the dashboard's read-only 'Linked Base44 app' panel (Base44 app → Settings → API keys).",
+      "requiredAtBoot": false
     }
   ]
 }
