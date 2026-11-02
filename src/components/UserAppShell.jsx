@@ -12,6 +12,7 @@ import InstallPrompt from "@/components/InstallPrompt";
 import NotificationsModal from "@/components/NotificationsModal";
 import NeuAppLoader from "@/components/NeuAppLoader";
 import { SDL_LOGO } from "@/lib/sdlUtils";
+import { initPushNotifications, isNative, pushNewNotifications } from "@/lib/pushNotifications";
 import { motion } from "framer-motion";
 
 const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutes
@@ -56,8 +57,18 @@ export default function UserAppShell({ user, onUserUpdate }) {
     try {
       const list = await db.entities.Notification.filter({ user_id: user.id, read: false }, "-created_date", 50);
       setUnread(list.length);
+      // On Android, mirror new records as system notifications.
+      pushNewNotifications(user.id, list);
     } catch (e) {}
   };
+
+  // Android notification channel + permission, then poll so new records reach the phone.
+  useEffect(() => {
+    if (!isNative()) return;
+    initPushNotifications();
+    const poll = setInterval(loadUnread, 60000);
+    return () => clearInterval(poll);
+  }, [user.id]);
   // Refresh user profile + notification count every time the user switches tabs
   useEffect(() => {
     refreshUser();
