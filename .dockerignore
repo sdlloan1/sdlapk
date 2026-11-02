@@ -1,0 +1,14 @@
+node_modules
+dist
+dist-ssr
+.git
+.git
+android/.gradle
+android/app/build
+android/build
+android/local.properties
+android/app/src/main/assets/public
+public/download
+/tmp
+*.apk
+*.aab

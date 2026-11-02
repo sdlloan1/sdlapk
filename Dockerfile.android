@@ -1,0 +1,29 @@
+# Android build toolchain for the Capacitor project in ./android.
+#
+# No application source is baked into this image: docker-compose.base44.yml
+# bind-mounts the repository at /app, so every APK is assembled from the current
+# checkout. This image only provides the JDK + Android SDK that Gradle needs.
+FROM eclipse-temurin:21-jdk
+
+ARG CMDLINE_TOOLS_VERSION=13114758
+ARG ANDROID_PLATFORM=android-36
+ARG ANDROID_BUILD_TOOLS=36.0.0
+
+ENV ANDROID_SDK_ROOT=/opt/android-sdk \
+    ANDROID_HOME=/opt/android-sdk \
+    GRADLE_USER_HOME=/root/.gradle \
+    PATH=/opt/android-sdk/platform-tools:/opt/android-sdk/cmdline-tools/latest/bin:$PATH
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends unzip curl ca-certificates \
+ && rm -rf /var/lib/apt/lists/* \
+ && mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools" "$GRADLE_USER_HOME" \
+ && curl -fsSL "https://dl.google.com/android/repository/commandlinetools-linux-${CMDLINE_TOOLS_VERSION}_latest.zip" -o /tmp/cmdline-tools.zip \
+ && unzip -q /tmp/cmdline-tools.zip -d "$ANDROID_SDK_ROOT/cmdline-tools" \
+ && mv "$ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools" "$ANDROID_SDK_ROOT/cmdline-tools/latest" \
+ && rm /tmp/cmdline-tools.zip \
+ && yes | sdkmanager --licenses > /dev/null \
+ && sdkmanager "platform-tools" "platforms;${ANDROID_PLATFORM}" "build-tools;${ANDROID_BUILD_TOOLS}" > /dev/null \
+ && rm -rf "$ANDROID_SDK_ROOT/.temp" "$ANDROID_SDK_ROOT/.downloadIntermediates"
+
+WORKDIR /app

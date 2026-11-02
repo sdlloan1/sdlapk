@@ -1,0 +1,12 @@
+{
+  "appId": "com.shubhdhanlakshmi.sdl",
+  "appName": "SDL",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "backgroundColor": "#ffffff",
+    "allowMixedContent": false
+  }
+}

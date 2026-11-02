@@ -1,16 +1,22 @@
 const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
 
 import { appParams } from '@/lib/app-params';
+import { API_BASE_URL, apiUrl } from '@/lib/apiBase';
+
+// Cross-origin requests (packaged Android app) cannot send cookies: the API
+// answers `Access-Control-Allow-Origin: *`, so the session travels as a bearer
+// token instead of a cookie there.
+const credentials = API_BASE_URL ? 'omit' : 'include';
 
 function authPath(suffix) {
   if (!/^[a-f0-9]{24}$/i.test(appParams.appId)) throw new Error('Invalid app ID');
-  return `/api/apps/${appParams.appId}/auth/${suffix}`;
+  return apiUrl(`/api/apps/${appParams.appId}/auth/${suffix}`);
 }
 
 async function post(suffix, body, token) {
   const response = await fetch(authPath(suffix), {
     method: 'POST',
-    credentials: 'include',
+    credentials,
     headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
     body: JSON.stringify(body),
   });
@@ -38,7 +44,7 @@ export async function continueMfa(result, returnTo) {
 
 // provider: 'google' | 'microsoft' | 'facebook' | 'apple'
 export async function loginWithSocial(provider, returnTo) {
-  const response = await fetch(`/api/apps/public/login-info/by-id/${appParams.appId}`);
+  const response = await fetch(apiUrl(`/api/apps/public/login-info/by-id/${appParams.appId}`));
   if (!response.ok) throw new Error('Unable to load sign-in options');
   const info = await response.json();
   if (info.auth_config?.mfa_policy !== 'required') return db.auth.loginWithProvider(provider, returnTo);
