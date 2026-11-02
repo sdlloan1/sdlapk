@@ -14,6 +14,7 @@ import {
   import { Image } from "@/components/ui/image";
   import DownloadAppModal from "@/components/DownloadAppModal";
   import PhotoAdjustModal from "@/components/PhotoAdjustModal";
+  import { logoutToLogin } from "@/lib/logout";
 
 export default function ProfilePage({ user, onUserUpdate, settings, active }) {
   const navigate = useNavigate();
@@ -163,7 +164,7 @@ export default function ProfilePage({ user, onUserUpdate, settings, active }) {
         <MenuItem icon={Download} label="Download App" onClick={() => setShowDownload(true)} />
         <MenuItem icon={Shield} label="Privacy Policy" onClick={() => setInfoModal(settings?.privacy_policy)} />
         <MenuItem icon={Info} label="About Us" onClick={() => setInfoModal(settings?.about_us)} />
-        <MenuItem icon={LogOut} label="Logout" onClick={() => db.auth.logout("/login")} />
+        <MenuItem icon={LogOut} label="Logout" onClick={() => logoutToLogin(navigate)} />
       </div>
 
       {/* Modals */}

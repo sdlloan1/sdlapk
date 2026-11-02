@@ -6,7 +6,7 @@
     "androidScheme": "https"
   },
   "android": {
-    "backgroundColor": "#ffffff",
+    "backgroundColor": "#E8EAF2",
     "allowMixedContent": false
   }
 }
