@@ -6,6 +6,9 @@ services:
       - .:/app
     ports:
       - "3000:3000"
+      # Second public entry point, for opening the same dev server directly in
+      # a browser tab: https://3001-$BASE44_PUBLIC_HOST_SUFFIX/
+      - "3001:3000"
     environment:
       - BASE44_PREVIEW_MODE
       - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
