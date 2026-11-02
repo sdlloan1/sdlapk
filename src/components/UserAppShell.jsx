@@ -2,7 +2,10 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React, { useState, useEffect, useRef } from "react";
 
+import { useNavigate } from "react-router-dom";
+import { App as NativeApp } from "@capacitor/app";
 import { useAuth } from "@/lib/AuthContext";
+import { clearSession } from "@/lib/logout";
 import { HandCoins, Repeat2, Wallet as WalletIcon, UserCircle, Bell } from "lucide-react";
 import LoanPage from "@/pages/app/LoanPage";
 import RepaymentPage from "@/pages/app/RepaymentPage";
@@ -12,6 +15,7 @@ import InstallPrompt from "@/components/InstallPrompt";
 import NotificationsModal from "@/components/NotificationsModal";
 import NeuAppLoader from "@/components/NeuAppLoader";
 import { SDL_LOGO } from "@/lib/sdlUtils";
+import { initPushNotifications, isNative, pushNewNotifications } from "@/lib/pushNotifications";
 import { motion } from "framer-motion";
 
 const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutes
@@ -25,6 +29,7 @@ const tabs = [
 
 export default function UserAppShell({ user, onUserUpdate }) {
   const { refreshUser } = useAuth();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("loan");
   const [showNotif, setShowNotif] = useState(false);
   const [unread, setUnread] = useState(0);
@@ -40,7 +45,8 @@ export default function UserAppShell({ user, onUserUpdate }) {
     const resetTimer = () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
-        db.auth.logout("/login");
+        clearSession();
+        navigate("/login", { replace: true });
       }, INACTIVITY_LIMIT);
     };
     const events = ["mousedown", "mousemove", "keydown", "scroll", "touchstart", "click"];
@@ -56,8 +62,24 @@ export default function UserAppShell({ user, onUserUpdate }) {
     try {
       const list = await db.entities.Notification.filter({ user_id: user.id, read: false }, "-created_date", 50);
       setUnread(list.length);
+      // On Android, mirror new records as system notifications.
+      pushNewNotifications(user.id, list);
     } catch (e) {}
   };
+
+  // Android notification channel + permission, then poll so new records reach the phone.
+  useEffect(() => {
+    if (!isNative()) return;
+    initPushNotifications();
+    const poll = setInterval(loadUnread, 30000);
+    const resume = NativeApp.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) loadUnread();
+    });
+    return () => {
+      clearInterval(poll);
+      resume.then((h) => h.remove()).catch(() => {});
+    };
+  }, [user.id]);
   // Refresh user profile + notification count every time the user switches tabs
   useEffect(() => {
     refreshUser();

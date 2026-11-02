@@ -2,7 +2,9 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React, { useState, useEffect } from "react";
 
+import { useNavigate } from "react-router-dom";
 import { SDL_LOGO } from "@/lib/sdlUtils";
+import { logoutToLogin } from "@/lib/logout";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import AdminUsers from "@/components/admin/AdminUsers";
 import AdminLoans from "@/components/admin/AdminLoans";
@@ -31,6 +33,7 @@ const tabs = [
 ];
 
 export default function Admin({ user }) {
+  const navigate = useNavigate();
   const [tab, setTab] = useState("dashboard");
   const [badges, setBadges] = useState({});
 
@@ -70,7 +73,7 @@ export default function Admin({ user }) {
               <p className="text-[10px] text-slate-400 leading-none mt-0.5">{user.display_name || user.full_name || user.email}</p>
             </div>
           </div>
-          <button onClick={() => db.auth.logout("/login")} className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-sdl-red transition-colors">
+          <button onClick={() => logoutToLogin(navigate)} className="w-11 h-11 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-500 hover:text-sdl-red transition-colors">
             <LogOut className="w-5 h-5" />
           </button>
         </div>

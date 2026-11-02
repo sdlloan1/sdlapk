@@ -6,6 +6,9 @@ services:
       - .:/app
     ports:
       - "3000:3000"
+      # Second public entry point, for opening the same dev server directly in
+      # a browser tab: https://3001-$BASE44_PUBLIC_HOST_SUFFIX/
+      - "3001:3000"
     environment:
       - BASE44_PREVIEW_MODE
       - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
@@ -30,3 +33,26 @@ services:
       base44.project: "SDL"
       base44.kind: "web"
       base44.port: "3000"
+
+  # One-shot Android APK builder (JDK 21 + Android SDK 36). It is behind a
+  # profile so `up -d` never starts it; build an APK with:
+  #   ./scripts/build-apk.sh
+  # or directly: docker compose -f docker-compose.base44.yml run --rm android
+  android:
+    profiles: ["apk"]
+    build:
+      context: .
+      dockerfile: Dockerfile.android
+    working_dir: /app
+    volumes:
+      - .:/app
+      - gradle-cache:/root/.gradle
+    environment:
+      - ANDROID_SDK_ROOT=/opt/android-sdk
+    command:
+      - sh
+      - -ec
+      - echo "sdk.dir=/opt/android-sdk" > android/local.properties && cd android && ./gradlew --no-daemon assembleDebug && ls -l app/build/outputs/apk/debug/
+
+volumes:
+  gradle-cache:

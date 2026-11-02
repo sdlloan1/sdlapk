@@ -42,3 +42,13 @@ npx skills add base44/skills
 - `vite.config.js` proxies `^/api/(apps|app-logs)` to `https://base44.app` only when `BASE44_PREVIEW_MODE=1`, because the Base44 Vite plugin skips its own platform proxy in the preview sandbox. With the flag unset the app keeps the plugin's original behavior.
 - Entities and backend functions are live in the preview. Signed out, entity reads return public data (the app is `public_without_login`) and authenticated functions such as `lookupPincode` answer `Authentication required to view users` (HTTP 500 from the platform); signed-in flows need a real login.
 - `AppSettings` is a single-record entity read with `db.entities.AppSettings.list()` and updated by id (`s[0].id`).
+
+## Android APK
+
+- `./scripts/build-apk.sh` (or `npm run apk`) builds a sideloadable APK: web bundle → `npx cap sync android` → Gradle `assembleDebug` inside the `android` compose service (JDK 21 + Android SDK 36; behind the `apk` profile so `up -d` never starts it) → copy to `public/download/sdl.apk`, downloadable from the preview at `/download/sdl.apk`.
+- The script deletes `public/download/` before the web build so an old APK never gets bundled into the new one. A plain `npm run build` (the publish build) copies whatever is there into the deployed site.
+- Android project: `android/`, Capacitor 8, applicationId `com.shubhdhanlakshmi.sdl`, minSdk 24, targetSdk 34 (classic window layout, no forced edge-to-edge; raise it together with safe-area CSS before a Play Store release).
+- Launcher icons and splash screens are generated from `assets/icon.png` and `assets/splash.png` with `npx capacitor-assets generate --android --iconBackgroundColor "#FF6B35" --splashBackgroundColor "#FF6B35"`; rerun after changing the logo.
+- The WebView has no same-origin backend, so `src/lib/apiBase.js` reads `VITE_BASE44_API_BASE_URL` (empty by default → relative requests, unchanged for web) and the APK build points it at `https://base44.app`. That origin answers `Access-Control-Allow-Origin: *`, so cross-origin calls use the bearer token instead of cookies (`src/lib/authMfa.js`, `src/pages/OAuthConsent.jsx`).
+- Hardware back navigation is wired in `src/main.jsx` through `@capacitor/app` and only runs on native.
+- The APK is debug-signed: fine for sideloading, but a Play Store release needs a real keystore (`assembleRelease` + signing config).

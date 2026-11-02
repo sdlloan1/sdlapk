@@ -2,6 +2,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React, { useEffect, useState } from "react";
 import { appParams } from "@/lib/app-params";
+import { API_BASE_URL, apiUrl } from "@/lib/apiBase";
 import { Button } from "@/components/ui/button";
 import { ShieldCheck, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
@@ -39,8 +40,8 @@ export default function OAuthConsent() {
         const infoHeaders = {};
         if (appParams.token) infoHeaders.Authorization = "Bearer " + appParams.token;
         const res = await fetch(
-          `/api/apps/${appParams.appId}/mcp/consent-info?handle=${encodeURIComponent(ctx)}`,
-          { credentials: "include", headers: infoHeaders },
+          apiUrl(`/api/apps/${appParams.appId}/mcp/consent-info?handle=${encodeURIComponent(ctx)}`),
+          { credentials: API_BASE_URL ? "omit" : "include", headers: infoHeaders },
         );
         if (!res.ok) {
           setError("This authorization link is invalid or has expired.");
@@ -89,9 +90,9 @@ export default function OAuthConsent() {
       // Cookie-backed sessions carry no token; sending "Bearer null" would
       // shadow the valid cookie, so add the header only when a token exists.
       if (appParams.token) headers.Authorization = "Bearer " + appParams.token;
-      const res = await fetch(`/api/apps/${appParams.appId}/mcp/authorize-grant`, {
+      const res = await fetch(apiUrl(`/api/apps/${appParams.appId}/mcp/authorize-grant`), {
         method: "POST",
-        credentials: "include",
+        credentials: API_BASE_URL ? "omit" : "include",
         headers,
         body: JSON.stringify({ ctx, action }),
       });

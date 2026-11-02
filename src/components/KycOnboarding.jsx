@@ -2,7 +2,9 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React, { useState, useEffect } from "react";
 
+import { useNavigate } from "react-router-dom";
 import NeuButton from "@/components/NeuButton";
+import { logoutToLogin } from "@/lib/logout";
 import NeuInput from "@/components/NeuInput";
 import {
   User, Phone, CreditCard, Mail, Upload, Wallet, CalendarDays,
@@ -56,6 +58,7 @@ function FileUploadBox({ label, value, onChange }) {
 }
 
 export default function KycOnboarding({ user, onComplete }) {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -222,7 +225,7 @@ export default function KycOnboarding({ user, onComplete }) {
               {new Date(blockedUntil).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
             </span>.
           </p>
-          <button onClick={() => db.auth.logout("/login")} className="neu-btn w-full h-11 rounded-2xl mt-5 text-sm font-medium text-slate-600">
+          <button onClick={() => logoutToLogin(navigate)} className="neu-btn w-full h-11 rounded-2xl mt-5 text-sm font-medium text-slate-600">
             Back to Login
           </button>
         </div>
@@ -323,7 +326,7 @@ export default function KycOnboarding({ user, onComplete }) {
           </div>
         </div>
 
-        <button onClick={() => db.auth.logout("/login")} className="mx-auto mt-4 text-xs text-slate-400 font-medium flex items-center gap-1 hover:text-sdl-orange transition-colors">
+        <button onClick={() => logoutToLogin(navigate)} className="mx-auto mt-4 text-xs text-slate-400 font-medium flex items-center gap-1 hover:text-sdl-orange transition-colors">
           <ArrowLeft className="w-3 h-3" /> Back to Login
         </button>
       </div>

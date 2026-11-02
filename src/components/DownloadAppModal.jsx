@@ -13,6 +13,10 @@ export default function DownloadAppModal({ onClose }) {
     db.entities.AppSettings.list().then((s) => { setSettings(s[0]); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
+  // The bundled APK (built by scripts/build-apk.sh) is served from /download/sdl.apk,
+  // so Android works out of the box without an admin-configured link.
+  const androidUrl = settings?.apk_android_url || "/download/sdl.apk";
+
   const download = (url, label) => {
     if (!url) {
       setMsg(`${label} app is coming soon!`);
@@ -43,11 +47,11 @@ export default function DownloadAppModal({ onClose }) {
           <div className="text-center text-sm text-slate-400 py-6">Loading...</div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => download(settings?.apk_android_url, "Android")} className="neu-card p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform">
+            <button onClick={() => download(androidUrl, "Android")} className="neu-card p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform">
               <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center"><Smartphone className="w-5 h-5 text-green-600" /></div>
               <span className="text-xs font-semibold text-slate-700">Android</span>
               <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
-                <Download className="w-3 h-3" /> {settings?.apk_android_url ? "Download" : "Coming Soon"}
+                <Download className="w-3 h-3" /> Download
               </span>
             </button>
             <button onClick={() => download(settings?.apk_ios_url, "iOS")} className="neu-card p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform">
