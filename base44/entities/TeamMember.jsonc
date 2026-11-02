@@ -1,0 +1,51 @@
+{
+  "name": "TeamMember",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "education": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string"
+    },
+    "photo_url": {
+      "type": "string"
+    },
+    "order": {
+      "type": "number",
+      "default": 0
+    },
+    "upi_id": {
+      "type": "string"
+    },
+    "upi_enabled": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "name",
+    "role"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
