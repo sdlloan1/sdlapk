@@ -24,7 +24,18 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
-      
+
+      // Without an app id there is no Base44 backend to ask (e.g. local sandbox),
+      // so skip the public-settings request and render the signed-out state.
+      if (!appParams.appId) {
+        setAppPublicSettings(null);
+        setIsLoadingAuth(false);
+        setIsAuthenticated(false);
+        setAuthChecked(true);
+        setIsLoadingPublicSettings(false);
+        return;
+      }
+
       // First, check app public settings (with token if available)
       // This will tell us if auth is required, user not registered, etc.
       const appClient = createAxiosClient({

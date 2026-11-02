@@ -1,0 +1,17 @@
+{
+  "name": "SDL - Shubh Dhan Lakshmi",
+  "short_name": "SDL",
+  "description": "India's No.1 Friendly Loan platform. Borrow and repay on your salary date.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FF6B35",
+  "icons": [
+    {
+      "src": "https://media.base44.com/images/public/user_6a65c0f6c3896fd41e9f3a73/59861e857_SDLlogo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
