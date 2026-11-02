@@ -3,6 +3,22 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import base44 from '@base44/vite-plugin'
 
+// In the Base44 preview sandbox the plugin skips its platform proxy, so mirror
+// it here to keep /api requests reachable against the hosted backend.
+const previewProxy =
+  process.env.BASE44_PREVIEW_MODE === '1'
+    ? {
+        server: {
+          proxy: {
+            '^/api/(apps|app-logs)([/?]|$)': {
+              target: 'https://base44.app',
+              changeOrigin: true,
+            },
+          },
+        },
+      }
+    : {}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -16,5 +32,6 @@ export default defineConfig({
       visualEditAgent: true
     }),
     react(),
-  ]
+  ],
+  ...previewProxy,
 });

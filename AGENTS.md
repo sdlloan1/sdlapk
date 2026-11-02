@@ -38,5 +38,7 @@ npx skills add base44/skills
 - Run the app with `docker compose -f docker-compose.base44.yml up -d` and open http://localhost:3000 (Vite dev server, live reload).
 - Dependencies are installed inside the container on every start from `package-lock.json`; do not install them on the host.
 - Build check: `docker compose -f docker-compose.base44.yml exec -T web npm run build` (compiles all modules and catches broken imports — the exported snapshot has had truncated/missing files restored this way).
-- The app talks to the Base44 backend through `src/api/base44Client.js`. In this sandbox there is no Base44 backend configured, so auth/entities are stubbed and every screen renders signed-out with empty data; public routes (`/onboarding`, `/login`, `/register`) are what can be verified locally.
+- The app talks to the Base44 backend through `src/api/base44Client.js`, which creates the SDK client for app `6a65ccde323b932e9e9dc990` (`VITE_BASE44_APP_ID` overrides it) and installs it as `globalThis.__B44_DB__` before React mounts. Most source files read the client from that global.
+- `vite.config.js` proxies `^/api/(apps|app-logs)` to `https://base44.app` only when `BASE44_PREVIEW_MODE=1`, because the Base44 Vite plugin skips its own platform proxy in the preview sandbox. With the flag unset the app keeps the plugin's original behavior.
+- Entities and backend functions are live in the preview. Signed out, entity reads return public data (the app is `public_without_login`) and authenticated functions such as `lookupPincode` answer `Authentication required to view users` (HTTP 500 from the platform); signed-in flows need a real login.
 - `AppSettings` is a single-record entity read with `db.entities.AppSettings.list()` and updated by id (`s[0].id`).

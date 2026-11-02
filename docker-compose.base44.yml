@@ -10,6 +10,7 @@ services:
       - BASE44_PREVIEW_MODE
       - __VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS
       - CHOKIDAR_USEPOLLING=true
+      - VITE_BASE44_APP_ID=6a65ccde323b932e9e9dc990
     command:
       - sh
       - -ec
