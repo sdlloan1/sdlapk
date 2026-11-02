@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import NeuButton from "@/components/NeuButton";
 import { ScrollText, Check } from "lucide-react";
 
-const SDL_LOGO = "https://media.base44.com/images/public/user_6a65c0f6c3896fd41e9f3a73/59861e857_SDLlogo.png";
+const SDL_LOGO = "/logo.png";
 
 export default function TermsModal({ user, onAccept }) {
   const [settings, setSettings] = useState(null);

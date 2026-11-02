@@ -8,7 +8,7 @@
   "theme_color": "#FF6B35",
   "icons": [
     {
-      "src": "https://media.base44.com/images/public/user_6a65c0f6c3896fd41e9f3a73/59861e857_SDLlogo.png",
+      "src": "/logo.png",
       "sizes": "any",
       "type": "image/png",
       "purpose": "any"

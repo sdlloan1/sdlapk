@@ -2,7 +2,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React from "react";
 
-const SDL_LOGO = "https://media.base44.com/images/public/6a65ccde323b932e9e9dc990/b4f7eec46_b088026ec_play-store-icon.png";
+const SDL_LOGO = "/logo.png";
 
 export default function NeuAuthLayout({ title, subtitle, footer, children }) {
   return (

@@ -137,7 +137,7 @@ export function generateLoanId(user) {
   return `SDL${mobile}${dd}${mm}${yyyy}${namePart}${randomDigits}`;
 }
 
-export const SDL_LOGO = "https://media.base44.com/images/public/6a65ccde323b932e9e9dc990/b4f7eec46_b088026ec_play-store-icon.png";
+export const SDL_LOGO = "/logo.png";
 
 // Canonical app domain used for referral links and share previews.
 export const APP_DOMAIN = "https://shubhdhanlakshmi.com";
