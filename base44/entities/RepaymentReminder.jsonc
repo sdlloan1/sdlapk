@@ -1,0 +1,109 @@
+{
+  "name": "RepaymentReminder",
+  "type": "object",
+  "properties": {
+    "loan_id": {
+      "type": "string"
+    },
+    "loan_code": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_mobile": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "t_minus_2",
+        "t_minus_1",
+        "due",
+        "plus_1",
+        "plus_2"
+      ]
+    },
+    "stage_label": {
+      "type": "string"
+    },
+    "scheduled_for": {
+      "type": "string",
+      "format": "date"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "loan_amount": {
+      "type": "number"
+    },
+    "repayment_amount": {
+      "type": "number"
+    },
+    "overdue_days": {
+      "type": "number",
+      "default": 0
+    },
+    "overdue_amount": {
+      "type": "number",
+      "default": 0
+    },
+    "total_payable": {
+      "type": "number"
+    },
+    "whatsapp_message": {
+      "type": "string"
+    },
+    "email_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "sent",
+        "failed",
+        "skipped"
+      ],
+      "default": "pending"
+    },
+    "email_sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "email_error": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "loan_id",
+    "stage",
+    "whatsapp_message"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

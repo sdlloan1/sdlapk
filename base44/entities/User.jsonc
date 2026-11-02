@@ -1,0 +1,139 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "mobile_number": {
+      "type": "string"
+    },
+    "pan_number": {
+      "type": "string"
+    },
+    "upi_id": {
+      "type": "string"
+    },
+    "salary_date": {
+      "type": "integer"
+    },
+    "referrer_name": {
+      "type": "string"
+    },
+    "referrer_mobile": {
+      "type": "string"
+    },
+    "address_line1": {
+      "type": "string"
+    },
+    "address_line2": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
+    },
+    "state": {
+      "type": "string"
+    },
+    "pincode": {
+      "type": "string"
+    },
+    "kyc_status": {
+      "type": "string",
+      "enum": [
+        "not_submitted",
+        "pending",
+        "approved",
+        "rejected",
+        "hold"
+      ],
+      "default": "not_submitted"
+    },
+    "kyc_attempt_count": {
+      "type": "number",
+      "default": 0
+    },
+    "kyc_attempt_date": {
+      "type": "string"
+    },
+    "kyc_blocked_until": {
+      "type": "string"
+    },
+    "rejection_reason": {
+      "type": "string"
+    },
+    "loan_limit": {
+      "type": "number",
+      "default": 0
+    },
+    "profile_picture": {
+      "type": "string"
+    },
+    "pan_card_image": {
+      "type": "string"
+    },
+    "aadhaar_front_image": {
+      "type": "string"
+    },
+    "aadhaar_back_image": {
+      "type": "string"
+    },
+    "salary_slip_image": {
+      "type": "string"
+    },
+    "additional_documents": {
+      "type": "string"
+    },
+    "salary_date_set_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "salary_slip_updated_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "terms_accepted": {
+      "type": "boolean",
+      "default": false
+    },
+    "account_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "hold"
+      ],
+      "default": "active"
+    },
+    "registration_complete": {
+      "type": "boolean",
+      "default": false
+    },
+    "limit_acknowledged": {
+      "type": "number",
+      "default": 0
+    },
+    "display_name": {
+      "type": "string",
+      "default": ""
+    },
+    "partner_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "pending",
+        "approved",
+        "rejected"
+      ],
+      "default": "none"
+    }
+  },
+  "required": [
+    "mobile_number",
+    "pan_number"
+  ]
+}

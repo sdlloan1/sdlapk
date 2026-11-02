@@ -1,0 +1,76 @@
+{
+  "name": "PartnerLoanAssignment",
+  "type": "object",
+  "properties": {
+    "loan_id": {
+      "type": "string"
+    },
+    "partner_id": {
+      "type": "string"
+    },
+    "loan_amount": {
+      "type": "number"
+    },
+    "repayment_amount": {
+      "type": "number"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "profit_earned": {
+      "type": "number",
+      "default": 0
+    },
+    "overdue_bonus": {
+      "type": "number",
+      "default": 0
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "repaid"
+      ],
+      "default": "active"
+    },
+    "repaid_date": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "loan_id",
+    "partner_id",
+    "loan_amount"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "data.partner_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

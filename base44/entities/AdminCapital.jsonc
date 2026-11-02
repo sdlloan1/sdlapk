@@ -1,0 +1,61 @@
+{
+  "name": "AdminCapital",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "deposit",
+        "withdrawal",
+        "disbursement",
+        "repayment_principal",
+        "repayment_interest"
+      ]
+    },
+    "amount": {
+      "type": "number"
+    },
+    "balance_after": {
+      "type": "number",
+      "default": 0
+    },
+    "description": {
+      "type": "string"
+    },
+    "related_loan_id": {
+      "type": "string"
+    },
+    "related_user_id": {
+      "type": "string"
+    },
+    "month_key": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "type",
+    "amount"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

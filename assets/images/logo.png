@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script>self["MonacoEnvironment"] = (function (paths) {
+          return {
+            globalAPI: false,
+            getWorkerUrl : function (moduleId, label) {
+              var result =  paths[label];
+              if (/^((http:)|(https:)|(file:)|(\/\/))/.test(result)) {
+                var currentUrl = String(window.location);
+                var currentOrigin = currentUrl.substr(0, currentUrl.length - window.location.hash.length - window.location.search.length - window.location.pathname.length);
+                if (result.substring(0, currentOrigin.length) !== currentOrigin) {
+                  var js = '/*' + label + '*/importScripts("' + result + '");';
+                  var blob = new Blob([js], { type: 'application/javascript' });
+                  return URL.createObjectURL(blob);
+                }
+              }
+              return result;
+            }
+          };
+        })({
+  "editorWorkerService": "/monacoeditorwork/editor.worker.bundle.js",
+  "typescript": "/monacoeditorwork/ts.worker.bundle.js",
+  "json": "/monacoeditorwork/json.worker.bundle.js",
+  "css": "/monacoeditorwork/css.worker.bundle.js",
+  "html": "/monacoeditorwork/html.worker.bundle.js",
+  "javascript": "/monacoeditorwork/ts.worker.bundle.js",
+  "less": "/monacoeditorwork/css.worker.bundle.js",
+  "scss": "/monacoeditorwork/css.worker.bundle.js",
+  "handlebars": "/monacoeditorwork/html.worker.bundle.js",
+  "razor": "/monacoeditorwork/html.worker.bundle.js"
+});</script>
+
+    <!-- Runtime config — must execute before the Vite module scripts read
+         window.__APP_CONFIG__. `defer` keeps that order (deferred classic
+         scripts and module scripts run in document order after parsing) while
+         unblocking the HTML parser, so asset preloads start immediately
+         instead of stalling ~160ms (p75) on this API round trip.
+         Back on the .js path: Render's extension-keyed edge cache rule twice
+         pinned a wrong body under this URL despite `no-store` (2026-08-20 and
+         2026-08-24); Render has since removed that cache rule for us, so the
+         suffix is safe again. If poisoning recurs: bump the `?v=` cache key,
+         or switch the src to the extension-less /api/frontend-config route
+         (kept serving as an escape hatch). -->
+    <script src="/api/frontend-config.js?v=3" defer></script>
+    <script src="https://accounts.google.com/gsi/client" async></script>
+    <meta charset="utf-8" />
+    <!-- Platform favicon: a real multi-size ICO (16/32/48) of the current sun
+         mark, served from public/. This is the ONLY rel="icon" link, and it
+         must stay that way — App.js rewrites the first match for backoffice.
+         Crawlers and link scrapers read this tag (and probe /favicon.ico
+         directly) with no JS, so the brand has to be correct statically. -->
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <script>
+      // Pre-paint theme stamp for the Appearance (appearance-themes) cohort: on
+      // a hard load the theme is applied by React (AppearanceThemeApplier) only after
+      // auth resolves, so the document boots light — a white flash,
+      // then light route skeletons (the FOUC this removes). AppearanceThemeApplier
+      // persists 'appearance-theme-applied' only while the feature is active,
+      // so every other cohort (flag-off, native, backoffice, runtime apps)
+      // never sets it and this stays a no-op. React stays the source of truth
+      // after mount: AppearanceThemeApplier
+      // re-applies or clears these exact attributes. Keys must stay byte-identical
+      // with components/settings/useAppearanceTheme.ts — BOOT_STAMP_CONTRACT there is
+      // asserted against this file by useAppearanceTheme.spec.ts, so update both.
+      //
+      // Kill-switch caveat: the marker is written while the feature is active and
+      // only cleared once /me resolves. On the FIRST load after a user loses the
+      // flag — or after the kill switch is flipped mid-incident — this still
+      // stamps dark, then React settles to light: one dark→light flash, which
+      // self-heals from the next load on. Flipping the switch does not repaint
+      // already-open tabs pre-paint; it collapses them on their next load.
+      try {
+        if ((localStorage.getItem('appearance-theme-applied') || localStorage.getItem('demo-display-theme-applied')) === '1') {
+          var appearanceTheme = localStorage.getItem('appearance-theme') || localStorage.getItem('demo-display-theme');
+          var appearanceDark = appearanceTheme === 'dark' ||
+            (appearanceTheme !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          if (appearanceDark) {
+            var appearanceRoot = document.documentElement;
+            appearanceRoot.setAttribute('data-ds', 'base44');
+            appearanceRoot.setAttribute('data-theme', 'dark');
+            appearanceRoot.classList.add('dark');
+            // Kill the pre-CSS white document flash; the app paints over it.
+            appearanceRoot.style.backgroundColor = '#09090b';
+          }
+        }
+      } catch (e) {}
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="Build useful apps, fast with Base44."
+    />
+
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Base44">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json" />
+    <title>Base44</title>
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://app.base44.com" />
+    <meta property="og:title" content="Base44" />
+    <meta property="og:site_name" content="Base44" />
+    <meta property="og:description" content="Build useful apps, fast with Base44." />
+    <meta property="og:image" content="https://app.base44.com/link_preview_v3.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Base44 link preview" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://app.base44.com" />
+    <meta name="twitter:title" content="Base44" />
+    <meta name="twitter:description" content="Build useful apps, fast with Base44." />
+    <meta name="twitter:image" content="https://app.base44.com/link_preview_v3.png" />
+    <meta name="twitter:image:alt" content="Base44 link preview" />
+    <script type="module" crossorigin src="/static/index-CnKzudiR.js"></script>
+    <link rel="modulepreload" crossorigin href="/static/rolldown-runtime-C0FnF6B9.js">
+    <link rel="modulepreload" crossorigin href="/static/runtime-QtgwY_nV.js">
+    <link rel="modulepreload" crossorigin href="/static/backend-yVLIM3Hm.js">
+    <link rel="modulepreload" crossorigin href="/static/vendor-react-BOOIA4XI.js">
+    <link rel="modulepreload" crossorigin href="/static/preload-helper-BZ1Pz5am.js">
+    <link rel="modulepreload" crossorigin href="/static/vendor-data-D4PR3Xw6.js">
+    <link rel="modulepreload" crossorigin href="/static/errorReporting-DawxmJfy.js">
+    <link rel="modulepreload" crossorigin href="/static/i18n-DueWPJbL.js">
+    <link rel="modulepreload" crossorigin href="/static/vendor-utils-Bw7_Viod.js">
+    <link rel="modulepreload" crossorigin href="/static/mixpanelUtils-Bvfyai44.js">
+    <link rel="modulepreload" crossorigin href="/static/use-toast-hWsBACKm.js">
+    <link rel="modulepreload" crossorigin href="/static/bridge-Cq_Szqk4.js">
+    <link rel="modulepreload" crossorigin href="/static/axiosClient-QN-zJhQw.js">
+    <link rel="modulepreload" crossorigin href="/static/domainValidation-FMKryCR2.js">
+    <link rel="modulepreload" crossorigin href="/static/I18nProvider--F6-3992.js">
+    <link rel="modulepreload" crossorigin href="/static/dist-DEyOCB6o.js">
+    <link rel="modulepreload" crossorigin href="/static/vendor-ui-FLuz20Mc.js">
+    <link rel="modulepreload" crossorigin href="/static/base-PPNGLV-v.js">
+    <link rel="modulepreload" crossorigin href="/static/AuthAPI-Jdw5p0Ih.js">
+    <link rel="modulepreload" crossorigin href="/static/useDesignSystem-CVilD4PW.js">
+    <link rel="modulepreload" crossorigin href="/static/logoutReturnPath-HjtsxsFd.js">
+    <link rel="modulepreload" crossorigin href="/static/AuthContext-DwZrjPI-.js">
+    <link rel="modulepreload" crossorigin href="/static/dist-CT9bjW66.js">
+    <link rel="modulepreload" crossorigin href="/static/useHideNativeBottomTabs-Dp2B4zpg.js">
+    <link rel="modulepreload" crossorigin href="/static/native-mobile-app-5lZBItr7.js">
+    <link rel="modulepreload" crossorigin href="/static/prop-types-D9WxI36-.js">
+    <link rel="modulepreload" crossorigin href="/static/esm-DmulnS_m.js">
+    <link rel="modulepreload" crossorigin href="/static/use-mobile-BkCzYCbw.js">
+    <link rel="modulepreload" crossorigin href="/static/create-zustand-store-BciaR_ZH.js">
+    <link rel="modulepreload" crossorigin href="/static/persist-to-storage-CHy9O5qR.js">
+    <link rel="modulepreload" crossorigin href="/static/actions.middleware-D_eRWZoy.js">
+    <link rel="modulepreload" crossorigin href="/static/WorkspaceAPI-h2tdy0sY.js">
+    <link rel="modulepreload" crossorigin href="/static/useWorkspaceUnlockState-Cg67Ec9B.js">
+    <link rel="modulepreload" crossorigin href="/static/WorkspaceContext-tkdyRbd6.js">
+    <link rel="modulepreload" crossorigin href="/static/react-B-802ilD.js">
+    <link rel="modulepreload" crossorigin href="/static/useFeatureFlags-b2zD4H7M.js">
+    <link rel="modulepreload" crossorigin href="/static/utils-5ZRoP5r8.js">
+    <link rel="modulepreload" crossorigin href="/static/toast-Dh_F1xgx.js">
+    <link rel="modulepreload" crossorigin href="/static/moment-CbrR2L3o.js">
+    <link rel="stylesheet" crossorigin href="/static/index-CapATpwD.css">
+    <meta name="bundle-commit" content="60f367c1283783f9383baadb2d7e4adce6659f0c">
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

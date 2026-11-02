@@ -1,0 +1,15 @@
+{
+  "name": "sendRepaymentReminders",
+  "entry": "entry.ts",
+  "automations": [
+    {
+      "type": "scheduled",
+      "name": "daily_repayment_reminders",
+      "description": "Creates and emails the 5 repayment reminders every day at 8:00 AM IST (02:30 UTC).",
+      "is_active": true,
+      "schedule_mode": "recurring",
+      "schedule_type": "cron",
+      "cron_expression": "30 2 * * *"
+    }
+  ]
+}
