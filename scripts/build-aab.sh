@@ -19,8 +19,10 @@ if [ ! -f android/keystore/keystore.properties ]; then
   exit 1
 fi
 
-# Keep the previously published downloads out of the bundle they are built from.
-rm -rf public/download
+# Keep the previously published downloads out of the bundle being built, but put
+# them back afterwards so the APK and the Play bundle can both be served.
+STASH="$(mktemp -d)"
+if [ -d public/download ]; then mv public/download "$STASH/download"; fi
 
 $COMPOSE up -d web
 $COMPOSE exec -T web sh -ec "VITE_BASE44_API_BASE_URL='${API_BASE_URL}' npm run build && npx cap sync android"
@@ -28,4 +30,6 @@ $COMPOSE run --rm android sh -ec 'cd android && ./gradlew --no-daemon bundleRele
 
 mkdir -p public/download
 cp android/app/build/outputs/bundle/release/app-release.aab public/download/sdl.aab
+if [ -d "$STASH/download" ]; then cp -n "$STASH"/download/* public/download/ 2>/dev/null || true; fi
+rm -rf "$STASH"
 echo "AAB ready: public/download/sdl.aab ($(du -h public/download/sdl.aab | cut -f1))"

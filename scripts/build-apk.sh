@@ -13,8 +13,10 @@ cd "$(dirname "$0")/.."
 COMPOSE="docker compose -f docker-compose.base44.yml"
 API_BASE_URL="${VITE_BASE44_API_BASE_URL:-https://base44.app}"
 
-# Keep the previously published APK out of the bundle it is built from.
-rm -rf public/download
+# Keep the previously published downloads out of the bundle being built, but put
+# them back afterwards so the APK and the Play bundle can both be served.
+STASH="$(mktemp -d)"
+if [ -d public/download ]; then mv public/download "$STASH/download"; fi
 
 $COMPOSE up -d web
 $COMPOSE exec -T web sh -ec "VITE_BASE44_API_BASE_URL='${API_BASE_URL}' npm run build && npx cap sync android"
@@ -22,4 +24,6 @@ $COMPOSE run --rm android
 
 mkdir -p public/download
 cp android/app/build/outputs/apk/debug/app-debug.apk public/download/sdl.apk
+if [ -d "$STASH/download" ]; then cp -n "$STASH"/download/* public/download/ 2>/dev/null || true; fi
+rm -rf "$STASH"
 echo "APK ready: public/download/sdl.apk ($(du -h public/download/sdl.apk | cut -f1))"
