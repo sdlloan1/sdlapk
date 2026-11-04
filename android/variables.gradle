@@ -1,10 +1,10 @@
 ext {
     minSdkVersion = 24
     compileSdkVersion = 36
-    // Target 34 keeps the classic (non edge-to-edge) window layout, so the
-    // app's own header never slides under the status bar. Raise to 35+ together
-    // with safe-area handling in the web CSS when publishing to Google Play.
-    targetSdkVersion = 34
+    // Google Play requires new apps to target Android 16 (API 36). The window is
+    // edge to edge; MainActivity applies the system bar, cutout and keyboard
+    // insets to the WebView, so the app's own header never slides under them.
+    targetSdkVersion = 36
     androidxActivityVersion = '1.11.0'
     androidxAppCompatVersion = '1.7.1'
     androidxCoordinatorLayoutVersion = '1.3.0'
