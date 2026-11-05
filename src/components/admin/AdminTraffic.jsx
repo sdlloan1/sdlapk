@@ -3,6 +3,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 import React, { useEffect, useMemo, useState } from "react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { Download, Eye, Smartphone, Users, Loader2 } from "lucide-react";
+import { isTrafficTrackingEnabled } from "@/lib/appTraffic";
 
 const DAY = 24 * 60 * 60 * 1000;
 const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -33,6 +34,12 @@ export default function AdminTraffic() {
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
+    // Nothing is recorded where tracking is off, so skip the table reads too.
+    if (!isTrafficTrackingEnabled) {
+      setFailed(true);
+      setLoading(false);
+      return;
+    }
     (async () => {
       try {
         const [d, e, total] = await Promise.all([

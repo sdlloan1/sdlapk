@@ -5,6 +5,14 @@ const db = globalThis.__B44_DB__;
 const SESSION_KEY = "sdl_session_id";
 const VIEW_PREFIX = "sdl_pv:";
 
+// The traffic dashboards read the AppEvent/AppDownload entities, which are
+// written by the trackEvent/trackDownload backend functions. An environment
+// whose backend does not have those artifacts yet (the preview runs against the
+// app's hosted backend) would answer every beacon with 404, so set
+// VITE_APP_TRAFFIC_ENABLED=false there and the calls are skipped entirely.
+export const isTrafficTrackingEnabled =
+  import.meta.env.VITE_APP_TRAFFIC_ENABLED !== "false";
+
 const platform = () => {
   try {
     return Capacitor.isNativePlatform() ? Capacitor.getPlatform() : "web";
@@ -28,6 +36,7 @@ export const sessionId = () => {
 
 // One AppEvent per page per session; failures never touch the UI.
 export const trackPageView = (page) => {
+  if (!isTrafficTrackingEnabled) return;
   try {
     const key = VIEW_PREFIX + page;
     if (sessionStorage.getItem(key)) return;
@@ -41,6 +50,7 @@ export const trackPageView = (page) => {
 };
 
 export const trackDownload = (source, fileName) => {
+  if (!isTrafficTrackingEnabled) return;
   db?.functions
     ?.invoke("trackDownload", {
       source,
