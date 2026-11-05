@@ -3,6 +3,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 import React, { useState, useEffect } from "react";
 
 import { X, Download, Apple, Smartphone } from "lucide-react";
+import { trackDownload } from "@/lib/appTraffic";
 
 export default function DownloadAppModal({ onClose }) {
   const [settings, setSettings] = useState(null);
@@ -13,9 +14,11 @@ export default function DownloadAppModal({ onClose }) {
     db.entities.AppSettings.list().then((s) => { setSettings(s[0]); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
-  // The bundled APK (built by scripts/build-apk.sh) is served from /download/sdl.apk,
-  // so Android works out of the box without an admin-configured link.
-  const androidUrl = settings?.apk_android_url || "/download/sdl.apk";
+  // The bundled APK (built by scripts/build-apk.sh) is served from
+  // /download/SDL - Shubh Dhan Lakshmi.apk, so Android works out of the box
+  // without an admin-configured link.
+  const androidUrl =
+    settings?.apk_android_url || `/download/${encodeURIComponent("SDL - Shubh Dhan Lakshmi.apk")}`;
 
   const download = (url, label) => {
     if (!url) {
@@ -47,7 +50,7 @@ export default function DownloadAppModal({ onClose }) {
           <div className="text-center text-sm text-slate-400 py-6">Loading...</div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => download(androidUrl, "Android")} className="neu-card p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform">
+            <button onClick={() => { trackDownload("download_modal"); download(androidUrl, "Android"); }} className="neu-card p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform">
               <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center"><Smartphone className="w-5 h-5 text-green-600" /></div>
               <span className="text-xs font-semibold text-slate-700">Android</span>
               <span className="text-[10px] text-slate-400 flex items-center gap-0.5">

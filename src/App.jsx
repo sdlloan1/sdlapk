@@ -6,6 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
+import TrafficTracker from './components/TrafficTracker';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import NeuAppLoader from '@/components/NeuAppLoader';
 import { Navigate } from 'react-router-dom';
@@ -19,6 +20,10 @@ import Home from './pages/Home';
 import PartnerPage from './pages/app/PartnerPage';
 import AdminLogin from './pages/AdminLogin';
 import AdminPage from './pages/AdminPage';
+
+// The admin APK is built with VITE_ADMIN_APP=true: it opens the admin panel and
+// every other route (user login, onboarding, home) is unavailable.
+const ADMIN_APP = import.meta.env.VITE_ADMIN_APP === "true";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -37,6 +42,20 @@ const AuthenticatedApp = () => {
       window.location.href = '/onboarding';
       return null;
     }
+  }
+
+  if (ADMIN_APP) {
+    return (
+      <Routes>
+        <Route path="/sdlsubr1250noida/login" element={<AdminLogin />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/sdlsubr1250noida/login" replace />} />}>
+          <Route path="/sdlsubr1250noida" element={<AdminPage adminOnly />} />
+        </Route>
+        <Route path="*" element={<Navigate to="/sdlsubr1250noida" replace />} />
+      </Routes>
+    );
   }
 
   // Render the main app
@@ -68,6 +87,7 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <ScrollToTop />
+          <TrafficTracker />
           <AuthenticatedApp />
         </Router>
         <Toaster />

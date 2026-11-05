@@ -1,0 +1,54 @@
+{
+  "name": "AppDownload",
+  "type": "object",
+  "properties": {
+    "platform": {
+      "type": "string",
+      "enum": [
+        "android",
+        "ios"
+      ],
+      "default": "android"
+    },
+    "source": {
+      "type": "string"
+    },
+    "file_name": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "referrer": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "platform"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

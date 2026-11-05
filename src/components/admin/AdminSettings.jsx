@@ -171,7 +171,7 @@ export default function AdminSettings() {
           <ApkUpload label="Android APK" value={settings.apk_android_url} onChange={(v) => update("apk_android_url", v)} />
           <ApkUpload label="iOS App File" value={settings.apk_ios_url} onChange={(v) => update("apk_ios_url", v)} />
           <div className="neu-inset-sm rounded-xl p-3">
-            <p className="text-xs text-slate-500">Users (not admins) see a "Download App" option. Leave the Android link empty to use the app's built-in APK at /download/sdl.apk; iOS shows "Coming Soon" until a link is set.</p>
+            <p className="text-xs text-slate-500">Users (not admins) see a "Download App" option. Leave the Android link empty to use the app's built-in APK at /download/SDL - Shubh Dhan Lakshmi.apk; iOS shows "Coming Soon" until a link is set.</p>
           </div>
         </div>
       )}

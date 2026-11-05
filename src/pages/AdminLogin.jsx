@@ -9,6 +9,10 @@ import PasswordInput from "@/components/PasswordInput";
 import NeuButton from "@/components/NeuButton";
 import { Shield, Mail, Lock, LogIn, AlertTriangle } from "lucide-react";
 
+// In the admin APK the customer login does not exist, so the link back to it
+// would only bounce to this same screen.
+const ADMIN_APP = import.meta.env.VITE_ADMIN_APP === "true";
+
 export default function AdminLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -34,7 +38,9 @@ export default function AdminLogin() {
       title="Admin Access"
       subtitle="Shubh Dhan Lakshmi Admin Panel"
       footer={
-        <Link to="/login" className="sdl-gradient-text font-semibold">← Back to user login</Link>
+        ADMIN_APP ? null : (
+          <Link to="/login" className="sdl-gradient-text font-semibold">← Back to user login</Link>
+        )
       }
     >
       <div className="flex justify-center mb-4">
