@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Smartphone, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { trackDownload } from "@/lib/appTraffic";
 
 const APK_NAME = "SDL - Shubh Dhan Lakshmi.apk";
 const APK_URL = `/download/${encodeURIComponent(APK_NAME)}`;
@@ -71,6 +72,7 @@ export default function DownloadApp() {
           <a
             href={APK_URL}
             download={APK_NAME}
+            onClick={() => trackDownload("download_page", APK_NAME)}
             className={`sdl-gradient mt-4 h-12 rounded-2xl flex items-center justify-center gap-2 text-white text-sm font-semibold shadow-lg transition-transform active:scale-95 ${apk.checked && !apk.available ? "opacity-50 pointer-events-none" : ""}`}
           >
             <Download className="w-4 h-4" /> Download APK

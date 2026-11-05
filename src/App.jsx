@@ -6,6 +6,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
+import TrafficTracker from './components/TrafficTracker';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import NeuAppLoader from '@/components/NeuAppLoader';
 import { Navigate } from 'react-router-dom';
@@ -68,6 +69,7 @@ function App() {
       <QueryClientProvider client={queryClientInstance}>
         <Router>
           <ScrollToTop />
+          <TrafficTracker />
           <AuthenticatedApp />
         </Router>
         <Toaster />

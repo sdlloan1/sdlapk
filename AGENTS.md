@@ -43,6 +43,14 @@ npx skills add base44/skills
 - Entities and backend functions are live in the preview. Signed out, entity reads return public data (the app is `public_without_login`) and authenticated functions such as `lookupPincode` answer `Authentication required to view users` (HTTP 500 from the platform); signed-in flows need a real login.
 - `AppSettings` is a single-record entity read with `db.entities.AppSettings.list()` and updated by id (`s[0].id`).
 
+## App traffic dashboard (admin)
+
+- Admin → **App Traffic** (`src/components/admin/AdminTraffic.jsx`) shows total APK downloads, last-7-days downloads, page views, active sessions, top screens and web-vs-Android split.
+- Data comes from two admin-only entities, `AppDownload` and `AppEvent`, written only by the `trackDownload` and `trackEvent` backend functions (service role, no sign-in required).
+- `src/components/TrafficTracker.jsx` (mounted in `App.jsx`) posts one `AppEvent` per page per session; `src/lib/appTraffic.js` holds the beacon helpers and the session id.
+- Downloads are counted in `src/pages/DownloadApp.jsx` and `src/components/DownloadAppModal.jsx` when the user taps the Android download.
+- These are new backend artifacts: in a preview that predates their deployment the function calls answer 404 and the tables do not exist, so the dashboard shows zeros until the app's backend has them. Play Store installs are not counted here — Play Console owns those.
+
 ## Android APK
 
 - `./scripts/build-apk.sh` (or `npm run apk`) builds a sideloadable APK: web bundle → `npx cap sync android` → Gradle `assembleDebug` inside the `android` compose service (JDK 21 + Android SDK 36; behind the `apk` profile so `up -d` never starts it) → copy to `public/download/SDL - Shubh Dhan Lakshmi.apk`, downloadable from the preview at `/download/SDL%20-%20Shubh%20Dhan%20Lakshmi.apk` (the download link in `src/pages/DownloadApp.jsx` and `src/components/DownloadAppModal.jsx` uses the same encoded name).
