@@ -5,8 +5,8 @@
 #    no same-origin backend of its own),
 # 2. syncs the bundle into the Capacitor Android project,
 # 3. assembles the APK inside the Android toolchain container,
-# 4. publishes it at public/download/sdl.apk so it can be downloaded from the
-#    running preview at /download/sdl.apk.
+# 4. publishes it at public/download/SDL - Shubh Dhan Lakshmi.apk so it can be
+#    downloaded from the running preview at /download/SDL - Shubh Dhan Lakshmi.apk.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -23,7 +23,7 @@ $COMPOSE exec -T web sh -ec "VITE_BASE44_API_BASE_URL='${API_BASE_URL}' npm run 
 $COMPOSE run --rm android
 
 mkdir -p public/download
-cp android/app/build/outputs/apk/debug/app-debug.apk public/download/sdl.apk
+cp android/app/build/outputs/apk/debug/app-debug.apk "public/download/SDL - Shubh Dhan Lakshmi.apk"
 if [ -d "$STASH/download" ]; then cp -n "$STASH"/download/* public/download/ 2>/dev/null || true; fi
 rm -rf "$STASH"
-echo "APK ready: public/download/sdl.apk ($(du -h public/download/sdl.apk | cut -f1))"
+echo "APK ready: public/download/SDL - Shubh Dhan Lakshmi.apk ($(du -h "public/download/SDL - Shubh Dhan Lakshmi.apk" | cut -f1))"

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Download, Smartphone, ShieldCheck, CheckCircle2 } from "lucide-react";
 
-const APK_URL = "/download/sdl.apk";
+const APK_NAME = "SDL - Shubh Dhan Lakshmi.apk";
+const APK_URL = `/download/${encodeURIComponent(APK_NAME)}`;
 
 const formatSize = (bytes) => {
   if (!bytes) return "";
@@ -57,7 +58,7 @@ export default function DownloadApp() {
               <Smartphone className="w-5 h-5 text-green-600" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold text-slate-700 truncate">sdl.apk</p>
+              <p className="text-sm font-semibold text-slate-700 truncate">{APK_NAME}</p>
               <p className="text-[11px] text-slate-400">
                 {!apk.checked ? "Checking file..." : apk.available ? `Android · ${apk.size || "Ready"}` : "Not available yet"}
               </p>
@@ -69,7 +70,7 @@ export default function DownloadApp() {
 
           <a
             href={APK_URL}
-            download="sdl.apk"
+            download={APK_NAME}
             className={`sdl-gradient mt-4 h-12 rounded-2xl flex items-center justify-center gap-2 text-white text-sm font-semibold shadow-lg transition-transform active:scale-95 ${apk.checked && !apk.available ? "opacity-50 pointer-events-none" : ""}`}
           >
             <Download className="w-4 h-4" /> Download APK

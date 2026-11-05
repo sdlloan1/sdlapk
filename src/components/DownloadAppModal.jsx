@@ -13,9 +13,11 @@ export default function DownloadAppModal({ onClose }) {
     db.entities.AppSettings.list().then((s) => { setSettings(s[0]); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
-  // The bundled APK (built by scripts/build-apk.sh) is served from /download/sdl.apk,
-  // so Android works out of the box without an admin-configured link.
-  const androidUrl = settings?.apk_android_url || "/download/sdl.apk";
+  // The bundled APK (built by scripts/build-apk.sh) is served from
+  // /download/SDL - Shubh Dhan Lakshmi.apk, so Android works out of the box
+  // without an admin-configured link.
+  const androidUrl =
+    settings?.apk_android_url || `/download/${encodeURIComponent("SDL - Shubh Dhan Lakshmi.apk")}`;
 
   const download = (url, label) => {
     if (!url) {

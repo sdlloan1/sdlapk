@@ -45,7 +45,7 @@ npx skills add base44/skills
 
 ## Android APK
 
-- `./scripts/build-apk.sh` (or `npm run apk`) builds a sideloadable APK: web bundle → `npx cap sync android` → Gradle `assembleDebug` inside the `android` compose service (JDK 21 + Android SDK 36; behind the `apk` profile so `up -d` never starts it) → copy to `public/download/sdl.apk`, downloadable from the preview at `/download/sdl.apk`.
+- `./scripts/build-apk.sh` (or `npm run apk`) builds a sideloadable APK: web bundle → `npx cap sync android` → Gradle `assembleDebug` inside the `android` compose service (JDK 21 + Android SDK 36; behind the `apk` profile so `up -d` never starts it) → copy to `public/download/SDL - Shubh Dhan Lakshmi.apk`, downloadable from the preview at `/download/SDL%20-%20Shubh%20Dhan%20Lakshmi.apk` (the download link in `src/pages/DownloadApp.jsx` and `src/components/DownloadAppModal.jsx` uses the same encoded name).
 - The script deletes `public/download/` before the web build so an old APK never gets bundled into the new one. A plain `npm run build` (the publish build) copies whatever is there into the deployed site.
 - Android project: `android/`, Capacitor 8, applicationId `com.shubhdhanlakshmi.sdl`, minSdk 24, targetSdk 36.
 - The app runs immersive full screen: `MainActivity` draws edge to edge and hides the status and navigation bars (swipe from an edge shows them briefly). Because a fullscreen WebView is never resized for the soft keyboard, `MainActivity` also applies the IME insets to the WebView, so the page shrinks instead of being covered — do not remove that listener, and keep the status bar flag out of `styles.xml`'s `AppTheme.NoActionBar`.
