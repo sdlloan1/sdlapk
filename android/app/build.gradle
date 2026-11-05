@@ -8,11 +8,16 @@ if (keystorePropertiesFile.exists()) {
     keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
 }
 
+// Set by scripts/build-admin-apk.sh: the admin build installs next to the
+// customer app (own applicationId, own launcher label) instead of replacing it.
+def adminApp = System.getenv('SDL_ADMIN_APP') == 'true'
+
 android {
     namespace = "com.shubhdhanlakshmi.sdl"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.shubhdhanlakshmi.sdl"
+        applicationId adminApp ? "com.shubhdhanlakshmi.sdl.admin" : "com.shubhdhanlakshmi.sdl"
+        manifestPlaceholders = [appLabel: adminApp ? "SDL Admin" : "@string/app_name"]
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

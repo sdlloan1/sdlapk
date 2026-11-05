@@ -11,6 +11,7 @@
     "typecheck": "tsc -p ./jsconfig.json",
     "preview": "vite preview",
     "apk": "bash scripts/build-apk.sh",
+    "apk:admin": "bash scripts/build-admin-apk.sh",
     "aab": "bash scripts/build-aab.sh"
   },
   "dependencies": {
