@@ -1,6 +1,6 @@
 {
   "appId": "com.shubhdhanlakshmi.sdl",
-  "appName": "SDL - Shubh Dhan Lakshmi",
+  "appName": "SDL",
   "webDir": "dist",
   "server": {
     "androidScheme": "https"
