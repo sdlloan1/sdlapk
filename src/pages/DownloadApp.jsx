@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Download, Smartphone, ShieldCheck, CheckCircle2, Copy, Check } from "lucide-react";
+import { ArrowLeft, Download, Smartphone, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { trackDownload } from "@/lib/appTraffic";
 
 const APK_NAME = "SDL - Shubh Dhan Lakshmi.apk";
 const APK_URL = `/download/${encodeURIComponent(APK_NAME)}`;
-const APK_FULL_URL = `${window.location.origin}${APK_URL}`;
 
 const formatSize = (bytes) => {
   if (!bytes) return "";
@@ -21,26 +20,6 @@ const steps = [
 export default function DownloadApp() {
   const navigate = useNavigate();
   const [apk, setApk] = useState({ checked: false, available: false, size: "" });
-  const [copied, setCopied] = useState(false);
-
-  const copyLink = async () => {
-    let ok = true;
-    try {
-      await navigator.clipboard.writeText(APK_FULL_URL);
-    } catch {
-      // Clipboard API can be blocked (embedded browsers); fall back to a selection copy.
-      const ta = document.createElement("textarea");
-      ta.value = APK_FULL_URL;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      ok = document.execCommand("copy");
-      ta.remove();
-    }
-    setCopied(ok);
-    setTimeout(() => setCopied(false), 2000);
-  };
 
   useEffect(() => {
     fetch(APK_URL, { method: "HEAD" })
@@ -101,23 +80,6 @@ export default function DownloadApp() {
           <p className="text-[10px] text-slate-400 text-center mt-2 flex items-center justify-center gap-1">
             <ShieldCheck className="w-3 h-3" /> For SDL users only · Android 7.0 and above
           </p>
-
-          {/* Full shareable link for this APK */}
-          <div className="neu-inset-sm rounded-2xl p-3 mt-4">
-            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wide">Direct download link</p>
-            <div className="flex items-center gap-2 mt-1.5">
-              <a href={APK_URL} className="text-[11px] text-slate-600 break-all leading-snug flex-1">
-                {APK_FULL_URL}
-              </a>
-              <button
-                onClick={copyLink}
-                aria-label="Copy download link"
-                className="neu-btn w-8 h-8 rounded-full flex items-center justify-center text-slate-500 shrink-0"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-          </div>
         </div>
 
         {/* Install steps */}
