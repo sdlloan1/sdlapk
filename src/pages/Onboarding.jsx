@@ -2,7 +2,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, HandCoins, ShieldCheck, Users, Wallet, Sparkles, Download } from "lucide-react";
+import { ArrowRight, ArrowLeft, HandCoins, ShieldCheck, Users, Wallet, Sparkles } from "lucide-react";
 
 
 const SDL_LOGO = "/logo.png";
@@ -55,10 +55,6 @@ export default function Onboarding() {
     <div className="min-h-screen flex flex-col items-center justify-center px-5 py-8 relative overflow-hidden">
       <div className="absolute top-0 -left-20 w-64 h-64 rounded-full sdl-gradient opacity-10 blur-3xl" />
       <div className="absolute bottom-0 -right-20 w-72 h-72 rounded-full bg-sdl-orange opacity-10 blur-3xl" />
-
-      <button onClick={() => navigate("/download")} className="absolute top-5 right-5 neu-btn h-9 px-3 rounded-full flex items-center gap-1.5 text-xs font-medium text-slate-600 z-20">
-        <Download className="w-3.5 h-3.5" /> Download APK
-      </button>
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}

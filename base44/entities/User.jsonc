@@ -8,7 +8,14 @@
         "admin",
         "user"
       ],
-      "default": "user"
+      "default": "user",
+      "rls": {
+        "write": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "mobile_number": {
       "type": "string"
@@ -65,11 +72,25 @@
       "type": "string"
     },
     "rejection_reason": {
-      "type": "string"
+      "type": "string",
+      "rls": {
+        "write": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "loan_limit": {
       "type": "number",
-      "default": 0
+      "default": 0,
+      "rls": {
+        "write": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "profile_picture": {
       "type": "string"
@@ -107,7 +128,14 @@
         "active",
         "hold"
       ],
-      "default": "active"
+      "default": "active",
+      "rls": {
+        "write": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "registration_complete": {
       "type": "boolean",
@@ -129,7 +157,14 @@
         "approved",
         "rejected"
       ],
-      "default": "none"
+      "default": "none",
+      "rls": {
+        "write": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     }
   },
   "required": [
