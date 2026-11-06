@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">SDL</string>
-    <string name="title_activity_main">SDL</string>
+    <string name="app_name">SDL - Shubh Dhan Lakshmi</string>
+    <string name="title_activity_main">SDL - Shubh Dhan Lakshmi</string>
     <string name="package_name">com.shubhdhanlakshmi.sdl</string>
     <string name="custom_url_scheme">com.shubhdhanlakshmi.sdl</string>
 </resources>
