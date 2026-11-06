@@ -11,7 +11,6 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import NeuAppLoader from '@/components/NeuAppLoader';
 import { Navigate } from 'react-router-dom';
 import Onboarding from './pages/Onboarding';
-import DownloadApp from './pages/DownloadApp';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
@@ -62,7 +61,6 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/download" element={<DownloadApp />} />
       <Route path="/sdlsubr1250noida/login" element={<AdminLogin />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
