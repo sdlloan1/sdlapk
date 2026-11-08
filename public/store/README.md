@@ -1,8 +1,8 @@
 # Play Store screenshots — SDL customer app
 
-Ten ready-to-upload phone screenshots (1080 × 1920 px) of the real customer app, each framed in SDL branding artwork.
+Fourteen ready-to-upload phone screenshots (1080 × 1920 px) of the real customer app, each framed in SDL branding artwork. Screens 11–14 come from the signed-in app, captured with a demo account (KYC approved); its email is blurred on the Profile shot.
 
-Open [`review.html`](../store/review.html) in the running preview (`/store/review.html`) to see all ten on one page.
+Open [`review.html`](../store/review.html) in the running preview (`/store/review.html`) to see all fourteen on one page and download them (a zip of all 14, or one by one).
 
 ## Files
 
@@ -18,11 +18,15 @@ Open [`review.html`](../store/review.html) in the running preview (`/store/revie
 | 8 | `screenshots/08-kyc-step1.png` | KYC in 3 quick steps | Tell us a little about yourself |
 | 9 | `screenshots/09-kyc-step2.png` | Upload documents safely | PAN, Aadhaar and salary slip |
 | 10 | `screenshots/10-kyc-step3.png` | Money on your salary date | Set your UPI and repayment day |
+| 11 | `screenshots/11-dashboard.png` | Your loan dashboard | Limit, loans and referrals in one place |
+| 12 | `screenshots/12-repayment.png` | Repay on your salary date | Every instalment, its due date and status |
+| 13 | `screenshots/13-wallet.png` | Saving Wallet | Put money aside and track your balance |
+| 14 | `screenshots/14-profile.png` | Your profile, secured | KYC, bank and contact details in one place |
 
 ## Uploading to Play Console
 
 1. Play Console → your app → **Grow → Store presence → Main store listing**.
-2. **Phone screenshots**: Play accepts **2–8** images, in the order you upload them. Upload 8 of the ten — keep 1, 2, 3, 4, 8, 9, 10 and one of 5/6/7, or reorder to taste.
+2. **Phone screenshots**: Play accepts **2–8** images, in the order you upload them. Upload 8 of the fourteen — a good set is 1, 2, 3, 11, 12, 13, 14 and one of 8/9/10, or reorder to taste.
 3. Drag them in the table order above; the first two are what shoppers see first.
 4. Save, then open the **Store listing preview** to confirm cropping.
 
@@ -42,6 +46,6 @@ Still missing for a full listing: a **feature graphic (1024 × 500)** and the ap
 
 Re-shoot after a UI change by repeating those three steps; nothing in the app source affects these files.
 
-## Note on the dashboard screens
+## Note on the signed-in screens
 
-Screens after KYC (Home/Loan, Repayment, Wallet, Profile) are **not** in this set. A freshly registered account cannot finish KYC: the backend rejects the client's save with *"You're not allowed to modify the following fields: data.kyc_status, data.registration_complete, data.kyc_attempt_count"*, so the dashboard is unreachable without an already-approved account. Once that is fixed — or with an approved demo login — those screens can be captured the same way and swapped in.
+Screens 11–14 were captured after signing in with a demo customer account whose KYC is already approved. New registrations still cannot finish KYC (the backend rejects the client's save of `data.kyc_status`, `data.registration_complete`, `data.kyc_attempt_count`), so this set needs an approved account — or that bug fixed — before it can be re-shot.
