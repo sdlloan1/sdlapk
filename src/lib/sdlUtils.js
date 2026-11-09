@@ -137,7 +137,9 @@ export function generateLoanId(user) {
   return `SDL${mobile}${dd}${mm}${yyyy}${namePart}${randomDigits}`;
 }
 
-export const SDL_LOGO = "https://media.db.com/images/public/6a65ccde323b932e9e9dc990/b4f7eec46_b088026ec_play-store-icon.png";
+// Bundled app icon (public/logo.png), so the logo also works in the APK
+// WebView and renders without CORS in the QR/PDF canvases.
+export const SDL_LOGO = "/logo.png";
 
 // Canonical app domain used for referral links and share previews.
 export const APP_DOMAIN = "https://shubhdhanlakshmi.com";

@@ -72,7 +72,7 @@ export default function AdminSettings() {
       {tab === "emails" && (
         <div className="space-y-4">
           <div className="neu-card p-5 flex items-center gap-4">
-            <img src="https://media.db.com/images/public/6a65ccde323b932e9e9dc990/42c50083d_applogo.png" alt="SDL Logo" className="w-16 h-16 rounded-2xl object-cover shrink-0" />
+            <img src="/logo.png" alt="SDL Logo" className="w-16 h-16 rounded-2xl object-cover shrink-0" />
             <div>
               <p className="text-sm font-bold text-slate-700">SDL Branded Email Template</p>
               <p className="text-xs text-slate-500 mt-1">Loan approval and closure emails are sent using the branded SDL template, with this logo in the header and footer. Triggered by admins from the Loans tab.</p>

@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, HandCoins, ShieldCheck, Users, Wallet, Sparkles, Download } from "lucide-react";
 import DownloadAppModal from "@/components/DownloadAppModal";
 
-const SDL_LOGO = "https://media.db.com/images/public/6a65ccde323b932e9e9dc990/b4f7eec46_b088026ec_play-store-icon.png";
+const SDL_LOGO = "/logo.png";
 
 const slides = [
   {
