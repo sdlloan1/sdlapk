@@ -175,7 +175,7 @@ export default function LoanPage({ user, onUserUpdate, settings, active }) {
   );
 
   async function handleReapply() {
-    await db.entities.User.update(user.id, { kyc_status: "pending" });
+    await db.functions.invoke("submitKyc", { reapply: true });
     onUserUpdate();
   }
 }

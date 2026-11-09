@@ -2,6 +2,9 @@
   "name": "AppDownload",
   "type": "object",
   "properties": {
+    "user_name": {
+      "type": "string"
+    },
     "platform": {
       "type": "string",
       "enum": [

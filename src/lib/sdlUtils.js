@@ -137,10 +137,20 @@ export function generateLoanId(user) {
   return `SDL${mobile}${dd}${mm}${yyyy}${namePart}${randomDigits}`;
 }
 
-export const SDL_LOGO = "/logo.png";
+export const SDL_LOGO = "https://media.db.com/images/public/6a65ccde323b932e9e9dc990/b4f7eec46_b088026ec_play-store-icon.png";
 
 // Canonical app domain used for referral links and share previews.
 export const APP_DOMAIN = "https://shubhdhanlakshmi.com";
+
+// Link shown at the end of every WhatsApp message and reminder. Admins edit it
+// in App Settings (Reminders tab) — changing it updates all messages at once.
+export const WHATSAPP_VISIT_URL = "https://shubhdhanlakshmi.in/";
+
+export function getWhatsappUrl(settings) {
+  const raw = (settings?.reminder_website_url || "").trim();
+  if (!raw) return WHATSAPP_VISIT_URL;
+  return /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+}
 
 // Admin-configurable shareable domain. Admins can change the host (e.g.
 // shubhdhanlakshmi.com) from App Settings; the rest of the referral link stays the same.

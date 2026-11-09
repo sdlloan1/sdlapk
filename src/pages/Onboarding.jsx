@@ -2,10 +2,10 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, ArrowLeft, HandCoins, ShieldCheck, Users, Wallet, Sparkles } from "lucide-react";
+import { ArrowRight, ArrowLeft, HandCoins, ShieldCheck, Users, Wallet, Sparkles, Download } from "lucide-react";
+import DownloadAppModal from "@/components/DownloadAppModal";
 
-
-const SDL_LOGO = "/logo.png";
+const SDL_LOGO = "https://media.db.com/images/public/6a65ccde323b932e9e9dc990/b4f7eec46_b088026ec_play-store-icon.png";
 
 const slides = [
   {
@@ -39,6 +39,7 @@ const slides = [
 
 export default function Onboarding() {
   const [step, setStep] = useState(0);
+  const [showDownload, setShowDownload] = useState(false);
   const navigate = useNavigate();
   const slide = slides[step];
   const Icon = slide.icon;
@@ -55,6 +56,10 @@ export default function Onboarding() {
     <div className="min-h-screen flex flex-col items-center justify-center px-5 py-8 relative overflow-hidden">
       <div className="absolute top-0 -left-20 w-64 h-64 rounded-full sdl-gradient opacity-10 blur-3xl" />
       <div className="absolute bottom-0 -right-20 w-72 h-72 rounded-full bg-sdl-orange opacity-10 blur-3xl" />
+
+      <button onClick={() => setShowDownload(true)} className="absolute top-5 right-5 neu-btn h-9 px-3 rounded-full flex items-center gap-1.5 text-xs font-medium text-slate-600 z-20">
+        <Download className="w-3.5 h-3.5" /> Download APK
+      </button>
 
       <div className="w-full max-w-md relative z-10">
         {/* Logo */}
@@ -121,6 +126,7 @@ export default function Onboarding() {
         </p>
       </div>
 
+      {showDownload && <DownloadAppModal onClose={() => setShowDownload(false)} />}
     </div>
   );
 }

@@ -48,4 +48,4 @@ Re-shoot after a UI change by repeating those three steps; nothing in the app so
 
 ## Note on the signed-in screens
 
-Screens 11–14 were captured after signing in with a demo customer account whose KYC is already approved. New registrations still cannot finish KYC (the backend rejects the client's save of `data.kyc_status`, `data.registration_complete`, `data.kyc_attempt_count`), so this set needs an approved account — or that bug fixed — before it can be re-shot.
+Screens 11–14 were captured after signing in with a demo customer account whose KYC is already approved. KYC submissions now go through the `submitKyc` backend function (the borrower's own fields only; status, attempts and limits are set server-side), so a fresh signup can complete KYC and reach the dashboard again.

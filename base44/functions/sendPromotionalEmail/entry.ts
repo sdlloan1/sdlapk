@@ -58,21 +58,14 @@ export default async function(req: Request): Promise<Response> {
         .filter((u: any) => u.email)
         .map((u: any) => ({ email: u.email, name: u.display_name || u.full_name || "User" }));
     } else if (recipientType === "active_loans") {
-      const loans = await db.asServiceRole.entities.LoanApplication.filter({
-        status: { $in: ["disbursed", "overdue", "pending_verification"] },
-      });
-      const userIds = [...new Set(loans.map((l: any) => l.user_id).filter(Boolean))];
-      if (userIds.length) {
-        const users = await db.asServiceRole.entities.User.filter({
-          id: { $in: userIds },
-          role: "user",
-        });
-        recipients = users
-          .filter((u: any) => u.email)
-          .map((u: any) => ({ email: u.email, name: u.display_name || u.full_name || "User" }));
-      }
-    } else if (recipientType === "all") {
+      // "Active users" — every user whose account is currently active.
       const users = await db.asServiceRole.entities.User.filter({ role: "user" });
+      recipients = users
+        .filter((u: any) => u.email && (u.account_status || "active") === "active")
+        .map((u: any) => ({ email: u.email, name: u.display_name || u.full_name || "User" }));
+    } else if (recipientType === "all") {
+      // "All users" means every approved user — KYC already completed.
+      const users = await db.asServiceRole.entities.User.filter({ role: "user", kyc_status: "approved" });
       recipients = users
         .filter((u: any) => u.email)
         .map((u: any) => ({ email: u.email, name: u.display_name || u.full_name || "User" }));

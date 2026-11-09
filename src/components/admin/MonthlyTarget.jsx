@@ -14,172 +14,204 @@ function monthLabel(mk) {
 }
 
 export default function MonthlyTarget({ monthly, allMonths }) {
-  const [settingsId, setSettingsId] = useState(null);
+  // targets: { "2026-11": { id, amount } } — stored in the MonthlyTarget entity
   const [targets, setTargets] = useState({});
+  const [loading, setLoading] = useState(true);
   const [selectedMonth, setSelectedMonth] = useState(monthKey(new Date()));
   const [showSet, setShowSet] = useState(false);
   const [targetInput, setTargetInput] = useState("");
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const s = await db.entities.AppSettings.list();
-        if (s[0]) {
-          setSettingsId(s[0].id);
-          try {
-            const parsed = JSON.parse(s[0].monthly_targets || "{}");
-            setTargets(parsed && typeof parsed === "object" ? parsed : {});
-          } catch { setTargets({}); }
-        }
-      } catch (e) {}
-    })();
-  }, []);
+  const loadTargets = async () => {
+    try {
+      const rows = await db.entities.MonthlyTarget.list("-created_date", 500);
+      const map = {};
+      rows.forEach((r) => {
+        if (r.month_key) map[r.month_key] = { id: r.id, amount: Number(r.amount) || 0 };
+      });
+      setTargets(map);
+    } catch (e) {
+      setTargets({});
+    }
+    setLoading(false);
+  };
 
-  const persist = async (updated) => {
-    if (!settingsId) return;
+  useEffect(() => { loadTargets(); }, []);
+
+  const availableMonths = useMemo(() => {
+    const keys = new Set(allMonths || []);
+    Object.keys(targets).forEach((k) => keys.add(k));
+    keys.add(monthKey(new Date()));
+    // Add 12 future months for advance target setting
+    const now = new Date();
+    for (let i = 1; i <= 12; i++) {
+      keys.add(monthKey(new Date(now.getFullYear(), now.getMonth() + i, 1)));
+    }
+    return Array.from(keys).sort().reverse();
+  }, [allMonths, targets]);
+
+  const currentTarget = targets[selectedMonth]?.amount || 0;
+  const distributed = monthly[selectedMonth]?.disbursed || 0;
+  const progress = currentTarget > 0 ? Math.min(100, (distributed / currentTarget) * 100) : 0;
+  const completed = currentTarget > 0 && distributed >= currentTarget;
+
+  const openSet = (mk = selectedMonth) => {
+    const saved = targets[mk]?.amount || 0;
+    setTargetInput(saved ? String(saved) : "");
+    setShowSet(true);
+  };
+
+  const removeTarget = async (mk) => {
+    const existing = targets[mk];
+    if (!existing) return;
+    if (!window.confirm(`Delete the target for ${monthLabel(mk)}?`)) return;
     setSaving(true);
     try {
-      await db.entities.AppSettings.update(settingsId, { monthly_targets: JSON.stringify(updated) });
+      await db.entities.MonthlyTarget.delete(existing.id);
+      const updated = { ...targets };
+      delete updated[mk];
+      setTargets(updated);
+    } catch (e) { alert("Failed to delete target"); }
+    finally { setSaving(false); }
+  };
+
+  const save = async () => {
+    const val = Number(targetInput) || 0;
+    setSaving(true);
+    try {
+      const existing = targets[selectedMonth];
+      if (val > 0) {
+        if (existing) {
+          await db.entities.MonthlyTarget.update(existing.id, { amount: val });
+          setTargets({ ...targets, [selectedMonth]: { id: existing.id, amount: val } });
+        } else {
+          const created = await db.entities.MonthlyTarget.create({ month_key: selectedMonth, amount: val });
+          setTargets({ ...targets, [selectedMonth]: { id: created.id, amount: val } });
+        }
+      } else if (existing) {
+        await db.entities.MonthlyTarget.delete(existing.id);
+        const updated = { ...targets };
+        delete updated[selectedMonth];
+        setTargets(updated);
+      }
+      setShowSet(false);
     } catch (e) { alert("Failed to save target"); }
     finally { setSaving(false); }
   };
 
-  const monthOptions = useMemo(() => {
-    const list = allMonths && allMonths.length ? allMonths : [monthKey(new Date())];
-    return list.includes(selectedMonth) ? list : [selectedMonth, ...list];
-  }, [allMonths, selectedMonth]);
-
-  const savedMonths = useMemo(
-    () => Object.keys(targets).sort((a, b) => (a < b ? 1 : -1)),
-    [targets]
-  );
-
-  const disbursed = Number(monthly?.[selectedMonth]?.disbursed) || 0;
-  const target = Number(targets[selectedMonth]) || 0;
-  const pct = target > 0 ? Math.min(100, Math.round((disbursed / target) * 100)) : 0;
-
-  const saveTarget = () => {
-    const value = Number(targetInput);
-    if (!value || value <= 0) return;
-    const updated = { ...targets, [selectedMonth]: value };
-    setTargets(updated);
-    setShowSet(false);
-    setTargetInput("");
-    persist(updated);
-  };
-
-  const removeTarget = (mk) => {
-    const updated = { ...targets };
-    delete updated[mk];
-    setTargets(updated);
-    persist(updated);
-  };
+  const targetMonths = Object.keys(targets).sort().reverse();
 
   return (
-    <div className="neu-card p-4">
-      <div className="flex items-center justify-between gap-2 mb-3">
+    <div className="neu-card p-5">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <Target className="w-4 h-4 text-sdl-orange" />
-          <h3 className="text-sm font-bold text-slate-600">Monthly Disbursement Target</h3>
+          <div className="w-9 h-9 rounded-full sdl-gradient flex items-center justify-center">
+            <Target className="w-4 h-4 text-white" />
+          </div>
+          <h3 className="text-sm font-bold text-slate-600">Monthly Distribution Target</h3>
         </div>
-        <button
-          onClick={() => { setShowSet((v) => !v); setTargetInput(target || ""); }}
-          className="neu-btn h-8 px-3 rounded-xl text-xs font-medium text-slate-500 flex items-center gap-1"
-        >
-          {target ? <Pencil className="w-3.5 h-3.5" /> : <Target className="w-3.5 h-3.5" />}
-          {target ? "Edit" : "Set"}
+        <button onClick={() => openSet()} className="neu-btn px-3 h-9 rounded-xl text-xs font-medium text-slate-600 flex items-center gap-1">
+          <Target className="w-3 h-3" /> {currentTarget > 0 ? "Update" : "Set Target"}
         </button>
       </div>
 
-      <div className="relative mb-3">
-        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
+      {/* Month selector */}
+      <div className="relative mb-4">
         <select
           value={selectedMonth}
-          onChange={(e) => { setSelectedMonth(e.target.value); setShowSet(false); }}
-          className="neu-input w-full h-11 pl-9 pr-9 text-sm text-slate-700 rounded-xl appearance-none"
+          onChange={(e) => setSelectedMonth(e.target.value)}
+          className="neu-input w-full h-11 px-3 text-sm text-slate-700 rounded-xl appearance-none pr-10"
         >
-          {monthOptions.map((mk) => (
+          {availableMonths.map((mk) => (
             <option key={mk} value={mk}>{monthLabel(mk)}</option>
           ))}
         </select>
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
       </div>
 
-      {showSet && (
-        <div className="flex items-center gap-2 mb-3">
-          <div className="flex-1">
-            <NeuInput
-              type="number"
-              min={0}
-              value={targetInput}
-              onChange={(e) => setTargetInput(e.target.value)}
-              placeholder="Target amount (₹)"
-            />
-          </div>
-          <button
-            disabled={saving}
-            onClick={saveTarget}
-            className="sdl-gradient h-12 w-12 rounded-xl text-white flex items-center justify-center disabled:opacity-50"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-          </button>
-          <button
-            onClick={() => { setShowSet(false); setTargetInput(""); }}
-            className="neu-btn h-12 w-12 rounded-xl text-slate-400 flex items-center justify-center"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-      )}
-
-      {target > 0 ? (
-        <div>
-          <div className="flex items-end justify-between mb-1">
-            <p className="text-xs text-slate-500">Disbursed {formatINR(disbursed)} of {formatINR(target)}</p>
-            <p className={`text-xs font-bold ${pct >= 100 ? "text-emerald-600" : "text-sdl-orange"}`}>{pct}%</p>
+      {/* Selected month progress */}
+      {loading ? (
+        <div className="flex items-center justify-center py-4"><Loader2 className="w-4 h-4 animate-spin text-slate-400" /></div>
+      ) : currentTarget > 0 ? (
+        <>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs text-slate-500">Distributed: <span className="font-semibold text-slate-700">{formatINR(distributed)}</span></span>
+            <span className="text-xs text-slate-500">Target: <span className="font-semibold text-slate-700">{formatINR(currentTarget)}</span></span>
           </div>
           <div className="h-3 rounded-full bg-slate-100 overflow-hidden">
-            <div
-              className={`h-full rounded-full ${pct >= 100 ? "bg-emerald-500" : "sdl-gradient"}`}
-              style={{ width: `${pct}%` }}
-            />
+            <div className={`h-full rounded-full transition-all duration-500 ${completed ? "bg-sdl-green" : "sdl-gradient"}`} style={{ width: `${progress}%` }} />
           </div>
-          {pct >= 100 && (
-            <p className="text-[11px] text-emerald-600 font-medium mt-2 flex items-center gap-1">
-              <CheckCircle2 className="w-3.5 h-3.5" /> Target achieved for {monthLabel(selectedMonth)}
-            </p>
-          )}
-        </div>
+          <div className="flex items-center justify-between mt-2">
+            <span className="text-xs font-medium text-slate-500">{progress.toFixed(0)}% completed</span>
+            {completed ? (
+              <span className="text-xs font-bold text-sdl-green flex items-center gap-1">
+                <CheckCircle2 className="w-3.5 h-3.5" /> Goal Completed!
+              </span>
+            ) : (
+              <span className="text-xs text-slate-400">{formatINR(currentTarget - distributed)} to go</span>
+            )}
+          </div>
+        </>
       ) : (
-        <p className="text-xs text-slate-400">
-          No target set for {monthLabel(selectedMonth)}. Disbursed {formatINR(disbursed)}.
-        </p>
+        <p className="text-xs text-slate-400 text-center py-3">No target set for {monthLabel(selectedMonth)}. Click "Set Target" to define a goal.</p>
       )}
 
-      {savedMonths.length > 1 && (
-        <div className="mt-4 pt-3 border-t border-slate-100 space-y-1.5">
-          <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">All targets</p>
-          {savedMonths.map((mk) => {
-            const t = Number(targets[mk]) || 0;
-            const d = Number(monthly?.[mk]?.disbursed) || 0;
-            const p = t > 0 ? Math.min(100, Math.round((d / t) * 100)) : 0;
-            return (
-              <div key={mk} className="flex items-center gap-2 text-xs">
-                <button
-                  onClick={() => { setSelectedMonth(mk); setShowSet(false); }}
-                  className={`w-20 text-left ${mk === selectedMonth ? "text-sdl-orange font-semibold" : "text-slate-500"}`}
-                >
-                  {monthLabel(mk)}
-                </button>
-                <span className="flex-1 text-slate-400">{formatINR(d)} / {formatINR(t)}</span>
-                <span className={`w-9 text-right font-semibold ${p >= 100 ? "text-emerald-600" : "text-slate-500"}`}>{p}%</span>
-                <button onClick={() => removeTarget(mk)} className="text-slate-300 hover:text-sdl-red" aria-label="Delete target">
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            );
-          })}
+      {/* All targets list */}
+      {targetMonths.length > 0 && (
+        <div className="mt-4 pt-4 border-t border-slate-200">
+          <p className="text-[11px] font-semibold text-slate-500 mb-2 flex items-center gap-1">
+            <Calendar className="w-3 h-3" /> All Saved Targets
+          </p>
+          <div className="space-y-1.5 max-h-40 overflow-y-auto">
+            {targetMonths.map((mk) => {
+              const t = targets[mk]?.amount || 0;
+              const d = monthly[mk]?.disbursed || 0;
+              const done = t > 0 && d >= t;
+              return (
+                <div key={mk} className="neu-inset-sm rounded-xl p-2.5 flex items-center justify-between text-xs">
+                  <span className="font-medium text-slate-600 w-20">{monthLabel(mk)}</span>
+                  <span className="text-slate-500 flex-1 text-center">Target {formatINR(t)}</span>
+                  <span className="text-slate-500 flex-1 text-center">Distributed {formatINR(d)}</span>
+                  <div className="flex items-center gap-1">
+                    {done ? (
+                      <span className="text-sdl-green font-semibold flex items-center gap-0.5">
+                        <CheckCircle2 className="w-3 h-3" /> Done
+                      </span>
+                    ) : (
+                      <span className="text-slate-400">{formatINR(t - d)} left</span>
+                    )}
+                    <button onClick={() => { setSelectedMonth(mk); openSet(mk); }} title="Edit target"
+                      className="w-6 h-6 rounded-full neu-btn flex items-center justify-center text-slate-500 shrink-0">
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                    <button onClick={() => removeTarget(mk)} title="Delete target"
+                      className="w-6 h-6 rounded-full neu-btn flex items-center justify-center text-sdl-red shrink-0">
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {showSet && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-black/30 backdrop-blur-sm">
+          <div className="neu-card p-6 w-full max-w-md neu-pop">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-base font-bold sdl-gradient-text">Set Target — {monthLabel(selectedMonth)}</h3>
+              <button onClick={() => setShowSet(false)} className="w-8 h-8 rounded-full neu-inset-sm flex items-center justify-center text-slate-400"><X className="w-4 h-4" /></button>
+            </div>
+            <p className="text-xs text-slate-500 mb-3">Set the distribution goal for {monthLabel(selectedMonth)}. The goal is marked complete when this month's total distribution reaches the target.</p>
+            <div className="mb-4">
+              <label className="block text-xs font-medium text-slate-500 mb-2 ml-1">Target Amount (₹)</label>
+              <NeuInput type="number" value={targetInput} onChange={(e) => setTargetInput(e.target.value)} placeholder="Enter target amount" />
+            </div>
+            <button onClick={save} disabled={saving} className="sdl-gradient w-full h-12 rounded-2xl text-white font-semibold text-sm shadow-lg flex items-center justify-center gap-2 disabled:opacity-50">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Target className="w-4 h-4" /> Save Target</>}
+            </button>
+          </div>
         </div>
       )}
     </div>

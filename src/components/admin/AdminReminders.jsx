@@ -3,7 +3,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 import React, { useState, useEffect } from "react";
 
 import { formatDate, formatINR } from "@/lib/sdlUtils";
-import { Bell, Copy, Check, MessageCircle, RefreshCw, Loader2, Mail, Send } from "lucide-react";
+import { Bell, Copy, Check, MessageCircle, RefreshCw, Loader2, Mail } from "lucide-react";
 
 const STAGES = [
   { id: "t_minus_2", label: "2 days before" },
@@ -32,11 +32,14 @@ function sanitizePhone(phone) {
 export default function AdminReminders() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [running, setRunning] = useState(false);
   const [filter, setFilter] = useState("all");
   const [copiedId, setCopiedId] = useState(null);
 
   const load = async () => {
+    // Reminders are kept for 24 hours only — older ones are removed here.
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    await db.entities.RepaymentReminder.deleteMany({ created_date: { $lt: cutoff } }).catch(() => {});
+
     const res = await db.entities.RepaymentReminder.list("-created_date", 200);
     setItems(res);
     setLoading(false);
@@ -49,24 +52,6 @@ export default function AdminReminders() {
       load();
     })();
   }, []);
-
-  const sendNow = async () => {
-    setRunning(true);
-    try {
-      const res = await db.functions.invoke("sendRepaymentReminders", { force: true });
-      const data = res.data || {};
-      alert(
-        data.error
-          ? `Failed: ${data.error}`
-          : `${data.generated || 0} reminders ready • ${data.sent || 0} emails sent • ${data.failed || 0} failed`
-      );
-      load();
-    } catch (e) {
-      alert("Failed to run reminders");
-    } finally {
-      setRunning(false);
-    }
-  };
 
   const copy = async (item) => {
     try {
@@ -99,11 +84,8 @@ export default function AdminReminders() {
             </p>
           </div>
           <div className="flex gap-2 shrink-0">
-            <button onClick={load} className="neu-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-500">
+            <button onClick={load} title="Refresh" className="neu-btn w-10 h-10 rounded-xl flex items-center justify-center text-slate-500">
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-            </button>
-            <button onClick={sendNow} disabled={running} className="sdl-gradient h-10 px-4 rounded-xl text-white text-xs font-semibold flex items-center gap-1.5 shadow-lg disabled:opacity-50">
-              {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Send className="w-3.5 h-3.5" /> Send Now</>}
             </button>
           </div>
         </div>

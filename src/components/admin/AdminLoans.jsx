@@ -2,7 +2,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React, { useState, useEffect } from "react";
 
-import { formatINR, formatDate, upiQrUrl, isOverdue, daysOverdue, getShareableDomain, payableTotal } from "@/lib/sdlUtils";
+import { formatINR, formatDate, upiQrUrl, isOverdue, daysOverdue, getWhatsappUrl, payableTotal } from "@/lib/sdlUtils";
 import NeuInput from "@/components/NeuInput";
 import { HandCoins, CheckCircle2, Clock, X, XCircle, Loader2, ScanLine, ArrowRight, ArrowLeft, Upload, FileDown, FileImage, Plus, FileAudio, Download, Pencil } from "lucide-react";
 import EditRepaymentModal from "@/components/admin/EditRepaymentModal";
@@ -458,7 +458,7 @@ function ActionModal({ action, settings, onClose, onDone }) {
 
       try { await db.functions.invoke("sendLoanEmail", { loanId: loan.id, emailType: "approval" }); } catch (e) {}
       await createNotification({ user_id: loan.user_id, title: "Loan Disbursed", message: `Your loan of ${formatINR(loan.amount)} has been disbursed to your UPI. Please repay ${formatINR(loan.repayment_amount)} by ${formatDate(loan.due_date)}.`, type: "loan", related_id: loan.id });
-      const waMessage = loanDisbursedMessage(loan.user_name, loan.amount, loan.repayment_amount, formatDate(loan.due_date), loan.loan_id, getShareableDomain(settings));
+      const waMessage = loanDisbursedMessage(loan.user_name, loan.amount, loan.repayment_amount, formatDate(loan.due_date), loan.loan_id, getWhatsappUrl(settings));
       await logWhatsApp({ user_id: loan.user_id, user_name: loan.user_name, user_mobile: loan.user_mobile, loan_id: loan.loan_id, message_type: "loan_disbursed", message: waMessage });
       setWaMsg({ message: waMessage, phone: loan.user_mobile });
     } catch (e) { alert("Failed"); } finally { setLoading(false); }
@@ -470,7 +470,7 @@ function ActionModal({ action, settings, onClose, onDone }) {
     try {
       await db.entities.LoanApplication.update(loan.id, { status: "rejected", admin_rejection_reason: reason.trim() });
       await createNotification({ user_id: loan.user_id, title: "Loan Rejected", message: `Your loan application of ${formatINR(loan.amount)} has been rejected. Reason: ${reason.trim()}`, type: "loan", related_id: loan.id });
-      const waMessage = loanRejectedMessage(loan.user_name, loan.amount, reason.trim(), loan.loan_id, getShareableDomain(settings));
+      const waMessage = loanRejectedMessage(loan.user_name, loan.amount, reason.trim(), loan.loan_id, getWhatsappUrl(settings));
       await logWhatsApp({ user_id: loan.user_id, user_name: loan.user_name, user_mobile: loan.user_mobile, loan_id: loan.loan_id, message_type: "loan_rejected", message: waMessage });
       setWaMsg({ message: waMessage, phone: loan.user_mobile });
     } catch (e) { alert("Failed"); } finally { setLoading(false); }
@@ -531,7 +531,7 @@ function ActionModal({ action, settings, onClose, onDone }) {
       try { await db.functions.invoke("sendLoanEmail", { loanId: loan.id, emailType: "closure" }); } catch (e) {}
       await createNotification({ user_id: loan.user_id, title: "Loan Repaid & Closed", message: `Your loan repayment is confirmed. ${formatINR(savingsBack)} savings credited to your wallet.`, type: "loan", related_id: loan.id });
       const u = await db.entities.User.filter({ id: loan.user_id });
-      const waMessage = repaymentVerifiedMessage(loan.user_name, loan.repayment_amount, u[0]?.loan_limit || 0, loan.loan_id, getShareableDomain(settings));
+      const waMessage = repaymentVerifiedMessage(loan.user_name, loan.repayment_amount, u[0]?.loan_limit || 0, loan.loan_id, getWhatsappUrl(settings));
       await logWhatsApp({ user_id: loan.user_id, user_name: loan.user_name, user_mobile: loan.user_mobile, loan_id: loan.loan_id, message_type: "repayment_verified", message: waMessage });
       setWaMsg({ message: waMessage, phone: loan.user_mobile });
     } catch (e) { alert("Failed: " + (e.message || "error")); } finally { setLoading(false); }
@@ -543,7 +543,7 @@ function ActionModal({ action, settings, onClose, onDone }) {
     try {
       await db.entities.LoanApplication.update(loan.id, { status: "disbursed", admin_rejection_reason: reason.trim() });
       await createNotification({ user_id: loan.user_id, title: "Repayment Rejected", message: `Your repayment proof for loan ${loan.loan_id || ""} was not accepted. Reason: ${reason.trim()}. Please re-upload a valid payment screenshot.`, type: "loan", related_id: loan.id });
-      setWaMsg({ message: `🪔 *Repayment Rejected* 🙏\n\nDear *${loan.user_name}*,\n\nYour repayment proof for loan ${loan.loan_id || ""} was not accepted.\nReason: *${reason.trim()}*\n\nPlease re-upload a valid payment screenshot.\n\nRegards,\nSDL Team 🪔`, phone: loan.user_mobile });
+      setWaMsg({ message: `🪔 *Repayment Rejected* 🙏\n\nDear *${loan.user_name}*,\n\nYour repayment proof for loan ${loan.loan_id || ""} was not accepted.\nReason: *${reason.trim()}*\n\nPlease re-upload a valid payment screenshot.\n\nVisit: ${getWhatsappUrl(settings)}\n\nRegards,\nSDL Team 🪔`, phone: loan.user_mobile });
     } catch (e) { alert("Failed"); } finally { setLoading(false); }
   };
 
