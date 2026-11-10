@@ -7,7 +7,7 @@ import { Send, Eye, Loader2, X, Users, User, AlertCircle, CheckCircle2, Mail, Co
 
 const NAME_TOKEN = "{name}";
 
-export default function PromotionalEmailComposer({ users, activeLoanUserCount }) {
+export default function PromotionalEmailComposer({ users, activeUserCount }) {
   const [subject, setSubject] = useState("");
   const [bodyMode, setBodyMode] = useState("html");
   const [body, setBody] = useState("");
@@ -18,12 +18,13 @@ export default function PromotionalEmailComposer({ users, activeLoanUserCount })
   const [sendResult, setSendResult] = useState(null);
 
   const kycIncompleteCount = users.filter((u) => u.kyc_status !== "approved").length;
+  const kycApprovedCount = users.filter((u) => u.kyc_status === "approved").length;
 
   const recipientCount =
     recipientType === "single" ? (selectedUserId ? 1 : 0)
     : recipientType === "kyc_incomplete" ? kycIncompleteCount
-    : recipientType === "active_loans" ? activeLoanUserCount
-    : users.length;
+    : recipientType === "active_loans" ? activeUserCount
+    : kycApprovedCount;
 
   const buildHtml = () => {
     if (bodyMode === "plain") {
@@ -41,7 +42,7 @@ export default function PromotionalEmailComposer({ users, activeLoanUserCount })
     if (recipientType !== "single" && recipientCount === 0) { alert("No recipients found in this category"); return; }
 
     const confirmSend = recipientType === "all"
-      ? window.confirm(`This will send an email to ALL ${recipientCount} users. Continue?`)
+      ? window.confirm(`This will send an email to ALL ${recipientCount} KYC-approved users. Continue?`)
       : true;
     if (!confirmSend) return;
 
@@ -67,8 +68,8 @@ export default function PromotionalEmailComposer({ users, activeLoanUserCount })
   const recipientOptions = [
     { id: "single", label: "Single User", icon: User, desc: "Select one specific user" },
     { id: "kyc_incomplete", label: "KYC Incomplete", icon: AlertCircle, desc: "Users with pending/incomplete KYC" },
-    { id: "active_loans", label: "Active Loan Users", icon: Users, desc: "Users with disbursed/active loans" },
-    { id: "all", label: "All Users", icon: Mail, desc: "Send to every registered user" },
+    { id: "active_loans", label: "Active Users", icon: Users, desc: "All users with an active account" },
+    { id: "all", label: "All Users", icon: Mail, desc: "Every user whose KYC is approved" },
   ];
 
   return (

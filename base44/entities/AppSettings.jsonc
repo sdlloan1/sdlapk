@@ -1,0 +1,254 @@
+{
+  "name": "AppSettings",
+  "type": "object",
+  "properties": {
+    "terms_conditions": {
+      "type": "string"
+    },
+    "agreement_template": {
+      "type": "string"
+    },
+    "agreement_style": {
+      "type": "string"
+    },
+    "loan_email_format": {
+      "type": "string",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "closure_email_format": {
+      "type": "string",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "loan_email_enabled": {
+      "type": "boolean",
+      "default": true,
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "closure_email_enabled": {
+      "type": "boolean",
+      "default": true,
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "reminder_email_enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "reminder_website_url": {
+      "type": "string",
+      "default": "https://shubhdhanlakshmi.in"
+    },
+    "privacy_policy": {
+      "type": "string"
+    },
+    "about_us": {
+      "type": "string"
+    },
+    "admin_upi_id": {
+      "type": "string",
+      "default": "9310601973@ibl"
+    },
+    "admin_upi_name": {
+      "type": "string",
+      "default": "SDL Shubh Dhan Lakshmi"
+    },
+    "referral_percentage": {
+      "type": "number",
+      "default": 1
+    },
+    "savings_percentage": {
+      "type": "number",
+      "default": 1
+    },
+    "interest_rate": {
+      "type": "number",
+      "default": 2
+    },
+    "portal_charge_percentage": {
+      "type": "number",
+      "default": 8
+    },
+    "processing_fee_percentage": {
+      "type": "number",
+      "default": 9
+    },
+    "partner_profit_percentage": {
+      "type": "number",
+      "default": 10
+    },
+    "partner_overdue_profit_percentage": {
+      "type": "number",
+      "default": 0.5
+    },
+    "overdue_daily_rate": {
+      "type": "number",
+      "default": 1
+    },
+    "kyc_daily_limit": {
+      "type": "number",
+      "default": 3
+    },
+    "lender_name": {
+      "type": "string",
+      "default": "Subrato Das"
+    },
+    "lender_pan": {
+      "type": "string",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "lender_email": {
+      "type": "string",
+      "default": "shubhdhanlakshmifund@gmail.com",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "lender_address": {
+      "type": "string",
+      "default": "Indian Doorstep, Gali no. 7, Block M, Near sector 59 metro station, Mamura, Sector 59, Gautam Buddha Nagar, Noida, Uttar Pradesh - 201301",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "shareable_domain": {
+      "type": "string",
+      "default": "shubhdhanlakshmi.com"
+    },
+    "apk_android_url": {
+      "type": "string"
+    },
+    "apk_ios_url": {
+      "type": "string"
+    },
+    "payment_apps": {
+      "type": "string"
+    },
+    "admin_notes": {
+      "type": "string",
+      "rls": {
+        "read": {
+          "$or": [
+            {
+              "created_by_id": "{{user.id}}"
+            },
+            {
+              "user_condition": {
+                "role": "admin"
+              }
+            }
+          ]
+        }
+      }
+    },
+    "monthly_target": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "admin_upi_id"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

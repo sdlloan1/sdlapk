@@ -2,7 +2,8 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 // Shared HTML email helpers used by SDL email-sending backend functions.
 
-const LOGO_URL = "https://media.base44.com/images/public/6ae84f54502b76ad02aafe92/5273080d1_logo.png";
+// Emails render outside the app, so this one stays an absolute public URL.
+const LOGO_URL = "https://media.base44.com/images/public/6a65ccde323b932e9e9dc990/42c50083d_applogo.png";
 
 export function logoImg(size = 76) {
   return `<img src="${LOGO_URL}" alt="SDL" width="${size}" height="${size}" style="border-radius:18px; display:block; margin:0 auto 10px auto;" />`;

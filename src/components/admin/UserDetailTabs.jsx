@@ -2,7 +2,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React, { useState, useEffect } from "react";
 
-import { formatINR, formatDate, formatAddress, getShareableDomain } from "@/lib/sdlUtils";
+import { formatINR, formatDate, formatAddress, getWhatsappUrl } from "@/lib/sdlUtils";
 import NeuInput from "@/components/NeuInput";
 import WhatsAppShareModal from "@/components/WhatsAppShareModal";
 import { kycApprovedMessage, kycDonePendingLimitMessage, limitIncreasedMessage } from "@/lib/whatsappMessages";
@@ -83,7 +83,7 @@ export default function UserDetailTabs({ user, onClose, onUpdated }) {
     try {
       const name = user.display_name || user.full_name || "User";
       await db.entities.User.update(user.id, { kyc_status: "approved", account_status: "active" });
-      const waMessage = kycDonePendingLimitMessage(name, getShareableDomain(settings));
+      const waMessage = kycDonePendingLimitMessage(name, getWhatsappUrl(settings));
       await logWhatsApp({ user_id: user.id, user_name: name, user_mobile: user.mobile_number, message_type: "kyc_approved", message: waMessage });
       setWaMsg({ message: waMessage, phone: user.mobile_number });
     } catch (e) { alert("Failed"); } finally { setLoading(false); }
@@ -98,7 +98,7 @@ export default function UserDetailTabs({ user, onClose, onUpdated }) {
       const newLim = Number(newLimit);
       await db.entities.User.update(user.id, { loan_limit: newLim });
       try { await db.functions.invoke("sendLimitAssignedEmail", { userId: user.id, limit: newLim }); } catch (e) {}
-      const waMessage = limitIncreasedMessage(name, newLim - prevLimit, newLim, getShareableDomain(settings));
+      const waMessage = limitIncreasedMessage(name, newLim - prevLimit, newLim, getWhatsappUrl(settings));
       await logWhatsApp({ user_id: user.id, user_name: name, user_mobile: user.mobile_number, message_type: "limit_increased", message: waMessage });
       setWaMsg({ message: waMessage, phone: user.mobile_number });
     } catch (e) { alert("Failed"); } finally { setLoading(false); }

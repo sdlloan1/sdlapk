@@ -8,7 +8,7 @@ import PromotionalEmailComposer from "@/components/admin/PromotionalEmailCompose
 export default function AdminEmailFlows() {
   const [settings, setSettings] = useState(null);
   const [users, setUsers] = useState([]);
-  const [activeLoanUserIds, setActiveLoanUserIds] = useState(new Set());
+  const [activeUserCount, setActiveUserCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [savingToggles, setSavingToggles] = useState(false);
   const [toggleSaved, setToggleSaved] = useState(false);
@@ -16,16 +16,13 @@ export default function AdminEmailFlows() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [s, u, activeLoans] = await Promise.all([
+        const [s, u] = await Promise.all([
           db.entities.AppSettings.list(),
           db.entities.User.filter({ role: "user" }),
-          db.entities.LoanApplication.filter({
-            status: { $in: ["disbursed", "overdue", "pending_verification"] },
-          }),
         ]);
         setSettings(s[0]);
         setUsers(u);
-        setActiveLoanUserIds(new Set(activeLoans.map((l) => l.user_id).filter(Boolean)));
+        setActiveUserCount(u.filter((x) => (x.account_status || "active") === "active").length);
       } catch (e) {}
       setLoading(false);
     };
@@ -117,7 +114,7 @@ export default function AdminEmailFlows() {
       {/* Promotional Email Composer */}
       <PromotionalEmailComposer
         users={users}
-        activeLoanUserCount={activeLoanUserIds.size}
+        activeUserCount={activeUserCount}
       />
     </div>
   );

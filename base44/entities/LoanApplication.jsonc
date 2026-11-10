@@ -27,35 +27,14 @@
       "type": "number"
     },
     "original_repayment_amount": {
-      "type": "number",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "number"
     },
     "waiver_amount": {
-      "type": "number",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "number"
     },
     "overdue_waived": {
       "type": "boolean",
-      "default": false,
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "default": false
     },
     "due_date": {
       "type": "string",
@@ -77,34 +56,13 @@
       "type": "string"
     },
     "disbursement_screenshot": {
-      "type": "string",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "string"
     },
     "call_recording_url": {
-      "type": "string",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "string"
     },
     "additional_files": {
-      "type": "string",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "string"
     },
     "repayment_screenshot": {
       "type": "string"
@@ -113,68 +71,26 @@
       "type": "string"
     },
     "admin_rejection_reason": {
-      "type": "string",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "string"
     },
     "disbursed_date": {
       "type": "string",
-      "format": "date-time",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "format": "date-time"
     },
     "repaid_date": {
       "type": "string",
-      "format": "date-time",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "format": "date-time"
     },
     "overdue_days": {
       "type": "number",
-      "default": 0,
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "default": 0
     },
     "referrer_earning_credited": {
       "type": "boolean",
-      "default": false,
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "default": false
     },
     "referrer_id": {
-      "type": "string",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "string"
     }
   },
   "required": [
@@ -187,8 +103,14 @@
     "create": {
       "$or": [
         {
-          "data.user_id": "{{user.id}}",
-          "data.status": "pending_disbursement"
+          "$and": [
+            {
+              "data.user_id": "{{user.id}}"
+            },
+            {
+              "data.status": "pending_disbursement"
+            }
+          ]
         },
         {
           "user_condition": {
@@ -210,16 +132,9 @@
       ]
     },
     "update": {
-      "$or": [
-        {
-          "data.user_id": "{{user.id}}"
-        },
-        {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      ]
+      "user_condition": {
+        "role": "admin"
+      }
     },
     "delete": {
       "user_condition": {

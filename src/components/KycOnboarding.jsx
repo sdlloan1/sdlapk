@@ -3,8 +3,9 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 import React, { useState, useEffect } from "react";
 
 import { useNavigate } from "react-router-dom";
-import NeuButton from "@/components/NeuButton";
 import { logoutToLogin } from "@/lib/logout";
+
+import NeuButton from "@/components/NeuButton";
 import NeuInput from "@/components/NeuInput";
 import {
   User, Phone, CreditCard, Mail, Upload, Wallet, CalendarDays,
@@ -174,9 +175,7 @@ export default function KycOnboarding({ user, onComplete }) {
     setError("");
     try {
       const today = new Date().toISOString().split("T")[0];
-      const reachedLimit = attemptsToday + 1 >= dailyLimit;
-      const nextDay = new Date(Date.now() + 86400000).toLocaleDateString("en-CA");
-      await db.entities.User.update(user.id, {
+      const res = await db.functions.invoke("submitKyc", {
         full_name: fullName.trim(),
         display_name: fullName.trim(),
         mobile_number: mobile,
@@ -196,16 +195,12 @@ export default function KycOnboarding({ user, onComplete }) {
         aadhaar_front_image: aadhaarFront,
         aadhaar_back_image: aadhaarBack,
         salary_slip_image: salarySlip,
-        kyc_status: "pending",
-        registration_complete: true,
-        kyc_attempt_count: attemptsToday + 1,
-        kyc_attempt_date: todayStr,
-        ...(reachedLimit ? { kyc_blocked_until: nextDay } : {}),
       });
+      if (res.data?.error) { setError(res.data.error); return; }
       try { localStorage.removeItem(DRAFT_KEY); } catch (e) {}
       onComplete();
     } catch (e) {
-      setError(e.message || "Submission failed.");
+      setError(e.response?.data?.error || e.message || "Submission failed.");
     } finally {
       setLoading(false);
     }

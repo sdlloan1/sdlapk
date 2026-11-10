@@ -1,0 +1,38 @@
+{
+  "name": "MonthlyTarget",
+  "type": "object",
+  "properties": {
+    "month_key": {
+      "type": "string"
+    },
+    "amount": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "month_key",
+    "amount"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

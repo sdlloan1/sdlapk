@@ -11,7 +11,7 @@ import {
 } from "../../shared/reminderContent.ts";
 
 const IST = "Asia/Kolkata";
-const DEFAULT_WEBSITE = "https://shubhdhanlakshmi.in";
+const DEFAULT_WEBSITE = "https://shubhdhanlakshmi.in/";
 
 function istToday() {
   return new Intl.DateTimeFormat("en-CA", {

@@ -17,6 +17,7 @@ export default function WalletPage({ user, settings, active }) {
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(null);
   const [visible, setVisible] = useState(8);
+  const [showHistory, setShowHistory] = useState(false);
   const [team, setTeam] = useState([]);
 
   const loadData = async () => {
@@ -123,20 +124,30 @@ export default function WalletPage({ user, settings, active }) {
 
       {/* History */}
       <div className="neu-card p-5">
-        <h3 className="text-sm font-bold text-slate-600 mb-3">Transaction History</h3>
-        {transactions.length === 0 ? (
-          <p className="text-xs text-slate-400 text-center py-4">No transactions yet.</p>
-        ) : (
-          <>
-            <div className="space-y-2">
-              {transactions.slice(0, visible).map((t) => <TxnRow key={t.id} t={t} />)}
-            </div>
-            {transactions.length > visible && (
-              <button onClick={() => setVisible((v) => v + 8)} className="w-full mt-3 neu-btn h-10 rounded-xl flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500">
-                <ChevronDown className="w-4 h-4" /> View More
-              </button>
+        <button onClick={() => setShowHistory((s) => !s)} className="w-full flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2">
+            <span className="text-sm font-bold text-slate-600">Transaction History</span>
+            <span className="text-[10px] text-slate-400">({transactions.length})</span>
+          </span>
+          <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${showHistory ? "rotate-180" : ""}`} />
+        </button>
+        {showHistory && (
+          <div className="mt-3 neu-fade-up">
+            {transactions.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-4">No transactions yet.</p>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  {transactions.slice(0, visible).map((t) => <TxnRow key={t.id} t={t} />)}
+                </div>
+                {transactions.length > visible && (
+                  <button onClick={() => setVisible((v) => v + 8)} className="w-full mt-3 neu-btn h-10 rounded-xl flex items-center justify-center gap-1.5 text-xs font-medium text-slate-500">
+                    <ChevronDown className="w-4 h-4" /> View More
+                  </button>
+                )}
+              </>
             )}
-          </>
+          </div>
         )}
       </div>
 

@@ -8,14 +8,7 @@
         "admin",
         "user"
       ],
-      "default": "user",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "default": "user"
     },
     "mobile_number": {
       "type": "string"
@@ -59,33 +52,54 @@
         "rejected",
         "hold"
       ],
-      "default": "not_submitted"
-    },
-    "kyc_attempt_count": {
-      "type": "number",
-      "default": 0
-    },
-    "kyc_attempt_date": {
-      "type": "string"
-    },
-    "kyc_blocked_until": {
-      "type": "string"
-    },
-    "rejection_reason": {
-      "type": "string",
+      "default": "not_submitted",
       "rls": {
-        "write": {
+        "update": {
           "user_condition": {
             "role": "admin"
           }
         }
       }
     },
+    "kyc_attempt_count": {
+      "type": "number",
+      "default": 0,
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "kyc_attempt_date": {
+      "type": "string",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "kyc_blocked_until": {
+      "type": "string",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
+    "rejection_reason": {
+      "type": "string"
+    },
     "loan_limit": {
       "type": "number",
       "default": 0,
       "rls": {
-        "write": {
+        "update": {
           "user_condition": {
             "role": "admin"
           }
@@ -130,7 +144,7 @@
       ],
       "default": "active",
       "rls": {
-        "write": {
+        "update": {
           "user_condition": {
             "role": "admin"
           }
@@ -139,7 +153,14 @@
     },
     "registration_complete": {
       "type": "boolean",
-      "default": false
+      "default": false,
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "limit_acknowledged": {
       "type": "number",
@@ -159,7 +180,7 @@
       ],
       "default": "none",
       "rls": {
-        "write": {
+        "update": {
           "user_condition": {
             "role": "admin"
           }

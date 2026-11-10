@@ -97,9 +97,9 @@ export default function AdminSettings() {
             </button>
           </div>
           <div className="neu-card p-4">
-            <label className="block text-xs font-medium text-slate-500 mb-2 ml-1">Website Link In Reminders</label>
-            <NeuInput value={settings.reminder_website_url || ""} onChange={(e) => update("reminder_website_url", e.target.value)} placeholder="https://shubhdhanlakshmi.in" />
-            <p className="text-[10px] text-slate-400 mt-2">This link appears at the bottom of every reminder email and WhatsApp message. Change it any time.</p>
+            <label className="block text-xs font-medium text-slate-500 mb-2 ml-1">Website Link In All Messages</label>
+            <NeuInput value={settings.reminder_website_url || ""} onChange={(e) => update("reminder_website_url", e.target.value)} placeholder="https://shubhdhanlakshmi.in/" />
+            <p className="text-[10px] text-slate-400 mt-2">This link is added to <span className="font-semibold">every</span> WhatsApp message and every reminder email. Change it once and all messages update.</p>
           </div>
           <div className="neu-inset-sm rounded-xl p-4">
             <p className="text-xs font-semibold text-slate-600 mb-2">Reminder Schedule (per loan)</p>
@@ -171,7 +171,7 @@ export default function AdminSettings() {
           <ApkUpload label="Android APK" value={settings.apk_android_url} onChange={(v) => update("apk_android_url", v)} />
           <ApkUpload label="iOS App File" value={settings.apk_ios_url} onChange={(v) => update("apk_ios_url", v)} />
           <div className="neu-inset-sm rounded-xl p-3">
-            <p className="text-xs text-slate-500">Users (not admins) see a "Download App" option. Leave the Android link empty to use the app's built-in APK at /download/SDL - Shubh Dhan Lakshmi.apk; iOS shows "Coming Soon" until a link is set.</p>
+            <p className="text-xs text-slate-500">Paste direct download links for the Android and iOS app files (the platform cannot store .apk/.ipa binaries). Users see a "Download App" option; if a link is empty, they'll see "Coming Soon".</p>
           </div>
         </div>
       )}

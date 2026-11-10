@@ -21,20 +21,10 @@ export default function PartnerRequestForm({ user, onSubmitted }) {
   const submit = async () => {
     setLoading(true);
     try {
-      await db.entities.PartnerRequest.create({
-        user_id: user.id,
-        user_name: user.display_name || user.full_name,
-        user_mobile: user.mobile_number,
-        user_email: user.email,
-        user_pan: user.pan_number,
-        user_upi_id: user.upi_id,
-        user_address: formatAddress(user),
-        status: "pending",
-      });
-      await db.auth.updateMe({ partner_status: "pending" });
+      await db.functions.invoke("submitPartnerRequest", {});
       setDone(true);
     } catch (e) {
-      alert("Failed to submit: " + (e.message || "error"));
+      alert("Failed to submit: " + (e.response?.data?.error || e.message || "error"));
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,7 @@
 const plain = (n) => (Number(n) || 0).toLocaleString("en-IN");
 
 function withAppUrl(body, appUrl) {
-  const url = appUrl || "https://shubhdhanlakshmi.com";
+  const url = appUrl || "https://shubhdhanlakshmi.in/";
   return `${body}\n\nVisit: ${url}`;
 }
 

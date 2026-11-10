@@ -8,7 +8,8 @@ import ChargeInfoButton from "@/components/ChargeInfoButton";
 import AllLoansModal from "@/components/AllLoansModal";
 import UpiVerifiedBadge from "@/components/UpiVerifiedBadge";
 import {
-  Repeat2, CheckCircle2, Upload, Loader2, X, Clock, History, AlertTriangle, ScanLine, ChevronRight, Copy, Download
+  Repeat2, CheckCircle2, Upload, Loader2, X, Clock, History, AlertTriangle, ScanLine, ChevronRight, Copy, Download,
+  ChevronDown, FileText, FileImage
 } from "lucide-react";
 import NeuPageLoader from "@/components/NeuPageLoader";
 
@@ -18,6 +19,7 @@ export default function RepaymentPage({ user, settings, active }) {
   const [loading, setLoading] = useState(true);
   const [repayModal, setRepayModal] = useState(null);
   const [showAllLoans, setShowAllLoans] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
 
   const loadData = async () => {
     setLoading(true);
@@ -74,25 +76,36 @@ export default function RepaymentPage({ user, settings, active }) {
 
       {/* History */}
       <div className="neu-card p-5">
-        <div className="flex items-center gap-2 mb-3">
-          <History className="w-4 h-4 text-slate-500" />
-          <h3 className="text-sm font-bold text-slate-600">Payment History</h3>
-        </div>
-        {historyLoans.length === 0 ? (
-          <p className="text-xs text-slate-400 text-center py-4">No payment history yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {historyLoans.map((l) => (
-              <div key={l.id} className="neu-inset-sm rounded-xl p-3 flex justify-between items-center">
-                <div>
-                  <p className="text-sm font-semibold text-slate-700">{formatINR(l.amount)}</p>
-                  <p className="text-[10px] text-slate-400">Repaid: {formatINR(l.repayment_amount)} • {formatDate(l.repaid_date)}</p>
-                </div>
-                <span className="text-xs font-medium text-sdl-green flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Paid
-                </span>
+        <button onClick={() => setShowHistory((s) => !s)} className="w-full flex items-center justify-between gap-2">
+          <span className="flex items-center gap-2">
+            <History className="w-4 h-4 text-slate-500" />
+            <span className="text-sm font-bold text-slate-600">Payment History</span>
+            <span className="text-[10px] text-slate-400">({historyLoans.length})</span>
+          </span>
+          {showHistory ? <ChevronDown className="w-4 h-4 text-slate-400" /> : <ChevronRight className="w-4 h-4 text-slate-400" />}
+        </button>
+        {showHistory && (
+          <div className="mt-3 neu-fade-up">
+            {historyLoans.length === 0 ? (
+              <p className="text-xs text-slate-400 text-center py-4">No payment history yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {historyLoans.map((l) => (
+                  <div key={l.id} className="neu-inset-sm rounded-xl p-3">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <p className="text-sm font-semibold text-slate-700">{formatINR(l.amount)}</p>
+                        <p className="text-[10px] text-slate-400">Repaid: {formatINR(l.repayment_amount)} • {formatDate(l.repaid_date)}</p>
+                      </div>
+                      <span className="text-xs font-medium text-sdl-green flex items-center gap-1">
+                        <CheckCircle2 className="w-3 h-3" /> Paid
+                      </span>
+                    </div>
+                    <LoanDocs loan={l} />
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
           </div>
         )}
       </div>
@@ -157,6 +170,8 @@ function RepaymentCard({ loan, settings, onRepay }) {
           <span className="font-bold sdl-gradient-text text-base">{formatINR(totalDue)}</span>
         </div>
       </div>
+
+      <LoanDocs loan={loan} />
 
       {loan.status === "pending_verification" ? (
         <div className="mt-3 neu-inset-sm rounded-xl p-3 flex items-center gap-2 text-xs text-amber-600">
@@ -252,13 +267,9 @@ function RepayModal({ loan, payee, settings, onClose, onSubmitted }) {
     setSubmitting(true);
     try {
       const shots = payments.map((p) => ({ screenshot: p.screenshot, amount: p.amount }));
-      await db.entities.LoanApplication.update(loan.id, {
-        repayment_screenshots: JSON.stringify(shots),
-        repayment_screenshot: shots[0]?.screenshot || "",
-        status: "pending_verification",
-      });
+      await db.functions.invoke("submitRepaymentProof", { loanId: loan.id, screenshots: shots });
       setDone(true);
-    } catch (e) { alert("Failed: " + (e.message || "error")); }
+    } catch (e) { alert("Failed: " + (e.response?.data?.error || e.message || "error")); }
     finally { setSubmitting(false); }
   };
 
@@ -348,5 +359,46 @@ function RepayModal({ loan, payee, settings, onClose, onSubmitted }) {
         </button>
       </div>
     </div>
+  );
+}
+
+// Agreement + disbursement proof, viewable and downloadable by the borrower.
+function LoanDocs({ loan }) {
+  const [proof, setProof] = useState(false);
+  if (!loan.agreement_pdf_url && !loan.disbursement_screenshot) return null;
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-2 mt-3">
+        {loan.agreement_pdf_url && (
+          <a href={loan.agreement_pdf_url} target="_blank" rel="noreferrer"
+            className="neu-btn h-9 px-3 rounded-xl text-xs font-medium text-slate-600 flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-sdl-orange" /> Agreement <Download className="w-3 h-3" />
+          </a>
+        )}
+        {loan.disbursement_screenshot && (
+          <button onClick={() => setProof(true)}
+            className="neu-btn h-9 px-3 rounded-xl text-xs font-medium text-slate-600 flex items-center gap-1.5">
+            <FileImage className="w-3.5 h-3.5 text-sdl-green" /> Payment Proof
+          </button>
+        )}
+      </div>
+
+      {proof && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 bg-black/60 backdrop-blur-sm" onClick={() => setProof(false)}>
+          <div className="neu-card p-4 w-full max-w-sm neu-pop" onClick={(e) => e.stopPropagation()}>
+            <div className="flex justify-between items-center mb-3">
+              <h4 className="text-sm font-bold text-slate-700">Payment Proof</h4>
+              <button onClick={() => setProof(false)} className="w-8 h-8 rounded-full neu-inset-sm flex items-center justify-center text-slate-400"><X className="w-4 h-4" /></button>
+            </div>
+            <img src={loan.disbursement_screenshot} alt="Payment proof" className="w-full rounded-xl" />
+            <a href={loan.disbursement_screenshot} download target="_blank" rel="noreferrer"
+              className="sdl-gradient w-full h-11 rounded-xl mt-3 text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-lg">
+              <Download className="w-4 h-4" /> Download
+            </a>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

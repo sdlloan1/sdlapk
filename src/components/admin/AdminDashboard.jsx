@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 
 import { formatINR, formatDate, monthKey } from "@/lib/sdlUtils";
 import NeuInput from "@/components/NeuInput";
-import { TrendingUp, HandCoins, PiggyBank, Plus, X, Loader2, Calendar, Coins, Wallet, ChevronDown, AlertCircle, ArrowUpRight } from "lucide-react";
+import { TrendingUp, HandCoins, PiggyBank, Plus, X, Loader2, Calendar, Coins, Wallet, ChevronDown, AlertCircle, ArrowUpRight, Download } from "lucide-react";
 import { cachedAggregate, invalidateAggregate } from "@/lib/aggregateCache";
 import InvestmentStrategy from "@/components/admin/InvestmentStrategy";
 import MonthlyTarget from "@/components/admin/MonthlyTarget";
@@ -23,6 +23,7 @@ export default function AdminDashboard() {
   const [walletAgg, setWalletAgg] = useState({ rows: [] });
   const [assignmentAgg, setAssignmentAgg] = useState({ rows: [] });
   const [capital, setCapital] = useState([]);
+  const [downloads, setDownloads] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [showAdd, setShowAdd] = useState(false);
@@ -57,6 +58,8 @@ export default function AdminDashboard() {
 
       const capList = await db.entities.AdminCapital.list("-created_date", 10);
       setCapital(capList);
+
+      try { setDownloads(await db.entities.AppDownload.count()); } catch { setDownloads(0); }
     } catch (e) {
       setError(true);
     }
@@ -163,6 +166,7 @@ export default function AdminDashboard() {
     { icon: HandCoins, label: "Total Partner Profit", value: formatINR(totalPartnerProfit), bg: "bg-orange-100", iconColor: "text-orange-600" },
     { icon: AlertCircle, label: "Total Pending Amount", value: formatINR(totalPendingAmount), bg: "bg-red-100", iconColor: "text-sdl-red" },
     { icon: ArrowUpRight, label: "Total Upcoming Amount", value: formatINR(totalUpcomingAmount), bg: "bg-indigo-100", iconColor: "text-indigo-600" },
+    { icon: Download, label: "Total Downloads", value: String(downloads), bg: "bg-emerald-100", iconColor: "text-emerald-600" },
   ];
 
   return (
@@ -250,17 +254,17 @@ export default function AdminDashboard() {
       </div>
 
       <div className="neu-card p-5">
-        <div className="flex items-center justify-between mb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
           <h3 className="text-sm font-bold text-slate-600">Capital Management</h3>
-          <div className="flex gap-2">
-            <button onClick={() => setShowProfitList(true)} className="bg-slate-200 px-4 py-2 rounded-xl text-slate-700 text-xs font-semibold flex items-center gap-1">
-              <Coins className="w-3 h-3" /> Withdrawals
+          <div className="grid grid-cols-3 gap-2 w-full sm:flex sm:w-auto sm:gap-2">
+            <button onClick={() => setShowProfitList(true)} className="bg-slate-200 px-2 sm:px-4 py-2 rounded-xl text-slate-700 text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 whitespace-nowrap">
+              <Coins className="w-3 h-3 shrink-0" /> Withdrawals
             </button>
-            <button onClick={() => setShowProfitWithdraw(true)} className="bg-sdl-green px-4 py-2 rounded-xl text-white text-xs font-semibold flex items-center gap-1 shadow-lg">
-              <Wallet className="w-3 h-3" /> Withdraw Profit
+            <button onClick={() => setShowProfitWithdraw(true)} className="bg-sdl-green px-2 sm:px-4 py-2 rounded-xl text-white text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 shadow-lg whitespace-nowrap">
+              <Wallet className="w-3 h-3 shrink-0" /> Withdraw Profit
             </button>
-            <button onClick={() => setShowAdd(true)} className="sdl-gradient px-4 py-2 rounded-xl text-white text-xs font-semibold flex items-center gap-1 shadow-lg">
-              <Plus className="w-3 h-3" /> Add / Withdraw
+            <button onClick={() => setShowAdd(true)} className="sdl-gradient px-2 sm:px-4 py-2 rounded-xl text-white text-[11px] sm:text-xs font-semibold flex items-center justify-center gap-1 shadow-lg whitespace-nowrap">
+              <Plus className="w-3 h-3 shrink-0" /> Add / Withdraw
             </button>
           </div>
         </div>

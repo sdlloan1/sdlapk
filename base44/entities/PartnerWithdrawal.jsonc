@@ -32,25 +32,11 @@
       "default": "pending"
     },
     "rejection_reason": {
-      "type": "string",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "type": "string"
     },
     "paid_date": {
       "type": "string",
-      "format": "date-time",
-      "rls": {
-        "write": {
-          "user_condition": {
-            "role": "admin"
-          }
-        }
-      }
+      "format": "date-time"
     }
   },
   "required": [
@@ -62,8 +48,14 @@
     "create": {
       "$or": [
         {
-          "data.user_id": "{{user.id}}",
-          "data.status": "pending"
+          "$and": [
+            {
+              "data.user_id": "{{user.id}}"
+            },
+            {
+              "data.status": "pending"
+            }
+          ]
         },
         {
           "user_condition": {
