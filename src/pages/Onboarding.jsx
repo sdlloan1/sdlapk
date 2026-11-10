@@ -12,7 +12,7 @@ const slides = [
     icon: HandCoins,
     title: "Friendly Loans, Simplified",
     points: [
-      "SDL (Shubh Dahan Lakshmi) is India's friendly loan platform built on trust.",
+      "SDL (Shubh Dhan Lakshmi) is India's friendly loan platform built on trust.",
       "Borrow the amount and repay on your salary date — no hidden charges.",
       "A community-driven approach where friends help friends meet urgent needs.",
     ],
@@ -97,6 +97,8 @@ export default function Onboarding() {
             <button
               key={i}
               onClick={() => setStep(i)}
+              aria-label={`Go to slide ${i + 1}: ${slides[i].title}`}
+              aria-current={i === step ? "step" : undefined}
               className={`h-2 rounded-full transition-all duration-300 ${i === step ? "w-8 sdl-gradient" : "w-2 neu-inset-sm"}`}
             />
           ))}

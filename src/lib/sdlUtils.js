@@ -2,7 +2,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 // SDL shared utility functions
 
-export function upiQrUrl(upiId, amount, name = "SDL Shubh Dahan Lakshmi") {
+export function upiQrUrl(upiId, amount, name = "SDL Shubh Dhan Lakshmi") {
   let upiString = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(name)}`;
   if (amount) upiString += `&am=${amount}&cu=INR`;
   return `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(upiString)}`;
@@ -10,7 +10,7 @@ export function upiQrUrl(upiId, amount, name = "SDL Shubh Dahan Lakshmi") {
 
 // Package-specific Android intent deep link that opens a chosen UPI app (PhonePe, GPay,
 // Paytm, CRED...) directly with the payment amount pre-filled.
-export function upiAppDeepLink(pkg, upiId, amount, name = "SDL Shubh Dahan Lakshmi", note = "") {
+export function upiAppDeepLink(pkg, upiId, amount, name = "SDL Shubh Dhan Lakshmi", note = "") {
   let params = `pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(name)}`;
   if (amount) params += `&am=${amount}&cu=INR`;
   if (note) params += `&tn=${encodeURIComponent(note)}`;

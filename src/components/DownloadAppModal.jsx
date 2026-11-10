@@ -41,7 +41,7 @@ export default function DownloadAppModal({ onClose }) {
       <div className="neu-card p-6 w-full max-w-sm neu-pop">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-base font-bold sdl-gradient-text">Download App</h3>
-          <button onClick={onClose} className="w-8 h-8 rounded-full neu-inset-sm flex items-center justify-center text-slate-400">
+          <button onClick={onClose} aria-label="Close download dialog" className="w-8 h-8 rounded-full neu-inset-sm flex items-center justify-center text-slate-400">
             <X className="w-4 h-4" />
           </button>
         </div>

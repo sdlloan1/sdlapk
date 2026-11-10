@@ -7,7 +7,7 @@ export default function PaymentAppsGrid({ settings, amount, note = "SDL Payment"
   const apps = parsePaymentApps(settings?.payment_apps);
   if (!apps.length) return null;
   const upiId = settings?.admin_upi_id || "9310601973@ibl";
-  const upiName = settings?.admin_upi_name || "SDL Shubh Dahan Lakshmi";
+  const upiName = settings?.admin_upi_name || "SDL Shubh Dhan Lakshmi";
 
   return (
     <div>
