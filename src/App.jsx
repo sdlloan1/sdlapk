@@ -38,7 +38,7 @@ const AuthenticatedApp = () => {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
       // Redirect to onboarding first, then login
-      window.location.href = '/onboarding';
+      window.location.href = `${import.meta.env.BASE_URL}onboarding`;
       return null;
     }
   }
@@ -83,7 +83,9 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
+        {/* The app is served from "/" locally and on Base44, but GitHub Pages
+            hosts it under /<repo>/, so routes follow Vite's base path. */}
+        <Router basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <ScrollToTop />
           <TrafficTracker />
           <AuthenticatedApp />

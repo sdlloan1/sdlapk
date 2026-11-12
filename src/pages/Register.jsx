@@ -25,7 +25,7 @@ export default function Register() {
       if (ref) localStorage.setItem("sdl_ref_mobile", ref);
     } catch (e) {}
     db.auth.isAuthenticated().then((authed) => {
-      if (authed) window.location.href = "/";
+      if (authed) window.location.href = import.meta.env.BASE_URL;
     }).catch(() => {});
   }, []);
 
@@ -45,7 +45,7 @@ export default function Register() {
       if (msg.includes("already") || msg.includes("exist") || msg.includes("verified")) {
         try {
           await db.auth.loginViaEmailPassword(email, password);
-          window.location.href = "/";
+          window.location.href = import.meta.env.BASE_URL;
           return;
         } catch (loginErr) {
           setError("Account already exists. Please log in instead.");
@@ -66,13 +66,13 @@ export default function Register() {
       if (result?.access_token) {
         db.auth.setToken(result.access_token);
       }
-      window.location.href = "/";
+      window.location.href = import.meta.env.BASE_URL;
     } catch (err) {
       const msg = (err.message || "").toLowerCase();
       if (msg.includes("already verified") || msg.includes("verified")) {
         try {
           await db.auth.loginViaEmailPassword(email, password);
-          window.location.href = "/";
+          window.location.href = import.meta.env.BASE_URL;
           return;
         } catch (loginErr) {
           setError("Account already verified. Please log in.");

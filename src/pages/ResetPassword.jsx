@@ -27,7 +27,7 @@ export default function ResetPassword() {
     setLoading(true);
     try {
       await db.auth.resetPassword({ resetToken, newPassword });
-      window.location.href = "/login";
+      window.location.href = `${import.meta.env.BASE_URL}login`;
     } catch (err) {
       setError(err.message || "Failed to reset password");
     } finally {

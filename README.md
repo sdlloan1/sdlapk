@@ -68,6 +68,16 @@ After pushing your changes to git, open the Base44 dashboard and publish the app
 base44 dashboard open
 ```
 
+## Host on GitHub Pages
+
+`.github/workflows/deploy-pages.yml` publishes the web app to GitHub Pages on every push to `main` (or from **Actions → Deploy to GitHub Pages → Run workflow**):
+
+- The build sets `VITE_BASE_PATH=/<repo>/`, so assets and routes live under `https://<owner>.github.io/<repo>/` (`vite.config.js` reads it; local dev and the Base44 build keep `/`).
+- Pages has no backend, so the bundle calls the hosted Base44 backend through `VITE_BASE44_API_BASE_URL` (set in the workflow to `https://sdlapk-02aafe92.base44.app`; update it when the app gets its published URL).
+- `index.html` is copied to `404.html` so deep links such as `/login` still load the app.
+
+One-time setup: in the repository, open **Settings → Pages → Build and deployment** and set **Source** to **GitHub Actions**. After the first successful run the site is at `https://<owner>.github.io/<repo>/`.
+
 ## Docs & Support
 
 Documentation: [https://docs.db.com/Integrations/Using-GitHub](https://docs.db.com/Integrations/Using-GitHub)

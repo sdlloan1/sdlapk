@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, HandCoins, ShieldCheck, Users, Wallet, Sparkles, Download } from "lucide-react";
 import DownloadAppModal from "@/components/DownloadAppModal";
 
-const SDL_LOGO = "/logo.png";
+const SDL_LOGO = `${import.meta.env.BASE_URL}logo.png`;
 
 const slides = [
   {
