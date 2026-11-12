@@ -58,6 +58,7 @@ npx skills add base44/skills
 - Each card asks the dev server for the file size with a `HEAD` request, so the page reflects whatever the last APK/AAB build actually produced instead of hardcoded sizes. A missing file shows "Coming Soon" and its button is disabled.
 - `src/components/DownloadAppModal.jsx` links to it ("Customer APK, admin APK and play store files"), and download clicks are counted through `trackDownload("downloads_page", file)` like the modal.
 - Links are built from `import.meta.env.BASE_URL`, so they stay correct on GitHub Pages (`/<repo>/download/...`) as well as on `/`.
+- Each card also shows a GitHub URL (`src/lib/githubDownloads.js`): `https://sdlloan1.github.io/sdlapk/download/<file>` served by the Pages build, and `https://raw.githubusercontent.com/sdlloan1/sdlapk/main/public/download/<file>` for the raw bytes. Both point at `main`, so a rebuilt artifact only appears there after it is merged to `main` and the Pages workflow finishes. Pages sends APKs as `application/vnd.android.package-archive`, which is what makes Android download and install them.
 
 ## Logo (protected asset)
 

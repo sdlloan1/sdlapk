@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft, Check, CheckCircle2, Copy, Download, Images, Package, ShieldCheck, Smartphone, UserRound,
+  ArrowLeft, Check, CheckCircle2, Copy, Download, Github, Images, Package, ShieldCheck, Smartphone, UserRound,
 } from "lucide-react";
 import { SDL_LOGO } from "@/lib/sdlUtils";
 import { trackDownload } from "@/lib/appTraffic";
+import { githubDownloadUrl } from "@/lib/githubDownloads";
 
 // Files published by scripts/build-apk.sh, scripts/build-admin-apk.sh and
 // scripts/build-aab.sh. The page reads their real size from the server, so it
@@ -95,8 +96,7 @@ export default function DownloadsPage() {
     return () => { alive = false; };
   }, []);
 
-  const copyLink = async (file) => {
-    const url = absoluteUrl(file.name);
+  const copyLink = async (url, key) => {
     let ok = true;
     try {
       await navigator.clipboard.writeText(url);
@@ -111,7 +111,7 @@ export default function DownloadsPage() {
       ok = document.execCommand("copy");
       ta.remove();
     }
-    setCopied(ok ? file.key : "");
+    setCopied(ok ? key : "");
     setTimeout(() => setCopied(""), 2000);
   };
 
@@ -143,6 +143,7 @@ export default function DownloadsPage() {
           const ready = info?.available;
           const Icon = file.icon;
           const url = filePath(file.name);
+          const ghUrl = githubDownloadUrl(file.name);
           return (
             <div key={file.key} className="neu-card p-4">
               <div className="flex items-center gap-3">
@@ -173,11 +174,25 @@ export default function DownloadsPage() {
                   {absoluteUrl(file.name)}
                 </a>
                 <button
-                  onClick={() => copyLink(file)}
+                  onClick={() => copyLink(absoluteUrl(file.name), file.key)}
                   aria-label={`Copy ${file.title} link`}
                   className="neu-btn w-8 h-8 rounded-full flex items-center justify-center text-slate-500 shrink-0"
                 >
                   {copied === file.key ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+
+              <div className="neu-inset-sm rounded-2xl p-2.5 mt-2 flex items-center gap-2">
+                <Github className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                <a href={ghUrl} target="_blank" rel="noreferrer" className="text-[10px] text-slate-500 break-all leading-snug flex-1">
+                  {ghUrl}
+                </a>
+                <button
+                  onClick={() => copyLink(ghUrl, `gh-${file.key}`)}
+                  aria-label={`Copy GitHub link for ${file.title}`}
+                  className="neu-btn w-8 h-8 rounded-full flex items-center justify-center text-slate-500 shrink-0"
+                >
+                  {copied === `gh-${file.key}` ? <Check className="w-3.5 h-3.5 text-green-600" /> : <Copy className="w-3.5 h-3.5" />}
                 </button>
               </div>
 
@@ -215,7 +230,8 @@ export default function DownloadsPage() {
         </div>
 
         <p className="text-center text-[10px] text-slate-400 pb-2">
-          Links point at this site, so they stay current after every build.
+          Every file is also committed to GitHub and served from sdlloan1.github.io/sdlapk, so the
+          GitHub links keep working without this site.
         </p>
       </div>
     </div>
