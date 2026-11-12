@@ -173,7 +173,7 @@ export default function ProfilePage({ user, onUserUpdate, settings, active }) {
       {showShare && <ShareModal user={user} settings={settings} onClose={() => setShowShare(false)} />}
       {tab === "team" && <TeamModal team={team} onClose={() => setTab("profile")} />}
       {infoModal && <InfoModal title={infoModal === settings?.privacy_policy ? "Privacy Policy" : "About Us"} content={infoModal} onClose={() => setInfoModal(null)} />}
-      {showDownload && <DownloadAppModal onClose={() => setShowDownload(false)} />}
+      {showDownload && <DownloadAppModal onClose={() => setShowDownload(false)} user={user} />}
       {showAdjust && photoFile && (
         <PhotoAdjustModal
           file={photoFile}

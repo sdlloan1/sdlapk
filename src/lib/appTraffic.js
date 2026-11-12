@@ -49,13 +49,13 @@ export const trackPageView = (page) => {
     .catch(() => {});
 };
 
-export const trackDownload = (source, fileName) => {
+export const trackDownload = (source, fileName, downloadPlatform = "android") => {
   if (!isTrafficTrackingEnabled) return;
   db?.functions
     ?.invoke("trackDownload", {
       source,
       file_name: fileName || "",
-      platform: "android",
+      platform: downloadPlatform,
       referrer: typeof document !== "undefined" ? document.referrer : "",
     })
     .catch(() => {});

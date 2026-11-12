@@ -49,6 +49,7 @@ npx skills add base44/skills
 - Data comes from two admin-only entities, `AppDownload` and `AppEvent`, written only by the `trackDownload` and `trackEvent` backend functions (service role, no sign-in required).
 - `src/components/TrafficTracker.jsx` (mounted in `App.jsx`) posts one `AppEvent` per page per session; `src/lib/appTraffic.js` holds the beacon helpers and the session id.
 - Downloads are counted in `src/pages/DownloadsPage.jsx` and `src/components/DownloadAppModal.jsx` when the user taps an APK download.
+- Since the app update of 2026-11-12 the modal also writes `AppDownload` itself when it has a signed-in `user` (`platform` android/ios), which the entity RLS now allows for `data.user_id === user.id`; visitors without a session still go through `trackDownload`, and the entity's `platform` enum carries `pwa` for the web build.
 - These are new backend artifacts: in a preview that predates their deployment the function calls answer 404 and the tables do not exist, so the dashboard shows zeros until the app's backend has them. Play Store installs are not counted here — Play Console owns those.
 - `VITE_APP_TRAFFIC_ENABLED` (default on) controls the beacons and the dashboard reads. The sandbox compose sets it to `false`, because the hosted backend does not have the new entities/functions yet and every beacon would otherwise 404 on each page load; unset (the published build), tracking runs as designed.
 

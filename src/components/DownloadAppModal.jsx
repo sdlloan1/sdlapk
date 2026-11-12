@@ -6,7 +6,7 @@ import { Link } from "react-router-dom";
 import { X, Download, Apple, Smartphone, ArrowRight } from "lucide-react";
 import { trackDownload } from "@/lib/appTraffic";
 
-export default function DownloadAppModal({ onClose }) {
+export default function DownloadAppModal({ onClose, user }) {
   const [settings, setSettings] = useState(null);
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
@@ -22,11 +22,23 @@ export default function DownloadAppModal({ onClose }) {
     settings?.apk_android_url ||
     `${import.meta.env.BASE_URL}download/${encodeURIComponent("SDL - Shubh Dhan Lakshmi.apk")}`;
 
-  const download = (url, label) => {
+  const download = (url, label, platform) => {
     if (!url) {
       setMsg(`${label} app is coming soon!`);
       setTimeout(() => setMsg(""), 2500);
       return;
+    }
+    // Counted in the admin Overview as "Total Downloads". A signed-in user
+    // writes the record directly (RLS allows their own user_id); visitors go
+    // through the service-role beacon so onboarding downloads still count.
+    if (user?.id) {
+      db.entities.AppDownload.create({
+        user_id: user.id,
+        user_name: user.display_name || user.full_name || "",
+        platform,
+      }).catch(() => {});
+    } else {
+      trackDownload(`download_modal_${platform}`, "", platform);
     }
     const a = document.createElement("a");
     a.href = url;
@@ -52,14 +64,14 @@ export default function DownloadAppModal({ onClose }) {
           <div className="text-center text-sm text-slate-400 py-6">Loading...</div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            <button onClick={() => { trackDownload("download_modal"); download(androidUrl, "Android"); }} className="neu-card p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform">
+            <button onClick={() => download(androidUrl, "Android", "android")} className="neu-card p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform">
               <div className="w-11 h-11 rounded-full bg-green-100 flex items-center justify-center"><Smartphone className="w-5 h-5 text-green-600" /></div>
               <span className="text-xs font-semibold text-slate-700">Android</span>
               <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
                 <Download className="w-3 h-3" /> Download
               </span>
             </button>
-            <button onClick={() => download(settings?.apk_ios_url, "iOS")} className="neu-card p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform">
+            <button onClick={() => download(settings?.apk_ios_url, "iOS", "ios")} className="neu-card p-4 rounded-2xl flex flex-col items-center gap-2 active:scale-95 transition-transform">
               <div className="w-11 h-11 rounded-full bg-slate-100 flex items-center justify-center"><Apple className="w-5 h-5 text-slate-700" /></div>
               <span className="text-xs font-semibold text-slate-700">iOS</span>
               <span className="text-[10px] text-slate-400 flex items-center gap-0.5">
