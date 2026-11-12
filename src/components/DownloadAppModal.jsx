@@ -2,7 +2,8 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React, { useState, useEffect } from "react";
 
-import { X, Download, Apple, Smartphone } from "lucide-react";
+import { Link } from "react-router-dom";
+import { X, Download, Apple, Smartphone, ArrowRight } from "lucide-react";
 import { trackDownload } from "@/lib/appTraffic";
 
 export default function DownloadAppModal({ onClose }) {
@@ -68,6 +69,13 @@ export default function DownloadAppModal({ onClose }) {
           </div>
         )}
         {msg && <p className="text-center text-sm text-sdl-orange font-medium mt-4">{msg}</p>}
+        <Link
+          to="/downloads"
+          onClick={onClose}
+          className="mt-4 flex items-center justify-center gap-1 text-[11px] font-medium text-slate-500"
+        >
+          Customer APK, admin APK and play store files <ArrowRight className="w-3 h-3" />
+        </Link>
       </div>
     </div>
   );

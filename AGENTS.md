@@ -48,9 +48,16 @@ npx skills add base44/skills
 - Admin → **App Traffic** (`src/components/admin/AdminTraffic.jsx`) shows total APK downloads, last-7-days downloads, page views, active sessions, top screens and web-vs-Android split.
 - Data comes from two admin-only entities, `AppDownload` and `AppEvent`, written only by the `trackDownload` and `trackEvent` backend functions (service role, no sign-in required).
 - `src/components/TrafficTracker.jsx` (mounted in `App.jsx`) posts one `AppEvent` per page per session; `src/lib/appTraffic.js` holds the beacon helpers and the session id.
-- Downloads are counted in `src/pages/DownloadApp.jsx` and `src/components/DownloadAppModal.jsx` when the user taps the Android download.
+- Downloads are counted in `src/pages/DownloadsPage.jsx` and `src/components/DownloadAppModal.jsx` when the user taps an APK download.
 - These are new backend artifacts: in a preview that predates their deployment the function calls answer 404 and the tables do not exist, so the dashboard shows zeros until the app's backend has them. Play Store installs are not counted here — Play Console owns those.
 - `VITE_APP_TRAFFIC_ENABLED` (default on) controls the beacons and the dashboard reads. The sandbox compose sets it to `false`, because the hosted backend does not have the new entities/functions yet and every beacon would otherwise 404 on each page load; unset (the published build), tracking runs as designed.
+
+## Downloads page
+
+- `/downloads` (`src/pages/DownloadsPage.jsx`, public route in `App.jsx`) lists every published file with its absolute URL and a copy button: the customer APK, the admin APK, the Play upload bundle (`sdl.aab`) and the Play Store screenshots ZIP, all under `public/download/`.
+- Each card asks the dev server for the file size with a `HEAD` request, so the page reflects whatever the last APK/AAB build actually produced instead of hardcoded sizes. A missing file shows "Coming Soon" and its button is disabled.
+- `src/components/DownloadAppModal.jsx` links to it ("Customer APK, admin APK and play store files"), and download clicks are counted through `trackDownload("downloads_page", file)` like the modal.
+- Links are built from `import.meta.env.BASE_URL`, so they stay correct on GitHub Pages (`/<repo>/download/...`) as well as on `/`.
 
 ## Logo (protected asset)
 
@@ -64,6 +71,8 @@ npx skills add base44/skills
 
 - The app is also edited in the hosted Base44 builder and re-exported as a zip; applying an export means copying its `src/` and `base44/` over this repo **without** dropping the local/APK adaptation layer. Keep these files from this repo when an export overwrites them: `assets/brand-logo.png`, `public/logo.png`, `assets/android-icon.png`, `src/api/base44Client.js`, `src/lib/apiBase.js`, `src/lib/app-params.js` (default app id), `src/lib/AuthContext.jsx` (no-app-id guard, `apiUrl`), `src/lib/authMfa.js` (`apiUrl`, cross-origin credentials), `src/lib/logout.js`, `src/lib/pushNotifications.js`, `src/main.jsx` (client import, Capacitor back button, `NetworkGate`), `vite.config.js` (preview proxy), `src/App.jsx` (`ADMIN_APP` routes, `TrafficTracker`), `src/pages/Admin.jsx` (traffic tab), `src/pages/AdminLogin.jsx`, `src/pages/AdminPage.jsx` (`adminOnly`), `src/components/UserAppShell.jsx`, `src/components/DownloadAppModal.jsx`, `src/pages/OAuthConsent.jsx`, `src/pages/app/ProfilePage.jsx`, plus the repo-only files (`appTraffic.js`, `TrafficTracker.jsx`, `AdminTraffic.jsx`, `NoNetworkScreen.jsx`, `logout.js`, `pushNotifications.js`). Re-apply `logoutToLogin(navigate)` where an export falls back to `db.auth.logout("/login")`.
 - Exports arrive with truncated files (e.g. `AdminNotepad.jsx`, `WhatsAppShareModal.jsx` were cut mid-function) and some export-only artifacts (a stray `const db = …` line before `<!doctype html>` in `index.html`). `npm run build` names the truncated file; restore that file from git. Keep this repo's `index.html`, which uses the local favicon and the fullscreen viewport meta.
+- Exports point images at `https://media.base44.com/...` (`SDL_LOGO` in `sdlUtils.js`/`qrBranded.js`, `TermsModal`, `AdminSettings`, `Onboarding`, `NeuAuthLayout`). Keep the local `` `${import.meta.env.BASE_URL}logo.png` `` versions — that is the protected logo, and it is the only image source the APK build can bundle.
+- The `shubhdhanlakshmi-beta-version2` export was diffed against this repo: identical component bodies, only the export format (`import { base44 }` instead of the `globalThis.__B44_DB__` stub) and the remote logo URLs differ. Do not "apply" it file-by-file without checking for a real feature delta — it would only revert the logo, the fixed brand name and the local adaptation layer.
 - `base44/entities/AppDownload.jsonc` is a union: the export's `user_name` plus this repo's `file_name`, `referrer`, `source`, `user_agent` that `trackDownload` writes.
 
 ## KYC submission
@@ -72,7 +81,7 @@ npx skills add base44/skills
 
 ## Android APK
 
-- `./scripts/build-apk.sh` (or `npm run apk`) builds a sideloadable APK: web bundle → `npx cap sync android` → Gradle `assembleDebug` inside the `android` compose service (JDK 21 + Android SDK 36; behind the `apk` profile so `up -d` never starts it) → copy to `public/download/SDL - Shubh Dhan Lakshmi.apk`, downloadable from the preview at `/download/SDL%20-%20Shubh%20Dhan%20Lakshmi.apk` (the download link in `src/pages/DownloadApp.jsx` and `src/components/DownloadAppModal.jsx` uses the same encoded name).
+- `./scripts/build-apk.sh` (or `npm run apk`) builds a sideloadable APK: web bundle → `npx cap sync android` → Gradle `assembleDebug` inside the `android` compose service (JDK 21 + Android SDK 36; behind the `apk` profile so `up -d` never starts it) → copy to `public/download/SDL - Shubh Dhan Lakshmi.apk`, downloadable from the preview at `/download/SDL%20-%20Shubh%20Dhan%20Lakshmi.apk` (`src/components/DownloadAppModal.jsx` and the `/downloads` page use the same encoded name).
 - The script deletes `public/download/` before the web build so an old APK never gets bundled into the new one. A plain `npm run build` (the publish build) copies whatever is there into the deployed site.
 - Android project: `android/`, Capacitor 8, applicationId `com.shubhdhanlakshmi.sdl`, minSdk 24, targetSdk 36.
 - Background notifications: `SdlBackgroundService` (started from `MainActivity.onCreate`) is a `specialUse` foreground service that keeps the app process — and with it the 30 s notification poll in `UserAppShell` — alive after the user leaves the app, so loan, repayment and wallet alerts reach the phone's notification tray. Android requires a visible notification for such a service, so it shows a silent, low-priority "SDL is active" entry (`sdl-background` channel, `ic_stat_sdl` icon); it never makes a sound. The manifest needs `FOREGROUND_SERVICE` + `FOREGROUND_SERVICE_SPECIAL_USE` and `android:foregroundServiceType="specialUse"` with its `PROPERTY_SPECIAL_USE_FGS_SUBTYPE` property — Android 14+ rejects the start without them. Polling stops if the user swipes the app out of recents (the WebView is destroyed); alerts then appear on the next launch.

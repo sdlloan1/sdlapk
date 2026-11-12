@@ -19,6 +19,7 @@ import Home from './pages/Home';
 import PartnerPage from './pages/app/PartnerPage';
 import AdminLogin from './pages/AdminLogin';
 import AdminPage from './pages/AdminPage';
+import DownloadsPage from './pages/DownloadsPage';
 
 // The admin APK is built with VITE_ADMIN_APP=true: it opens the admin panel and
 // every other route (user login, onboarding, home) is unavailable.
@@ -61,6 +62,7 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route path="/onboarding" element={<Onboarding />} />
+      <Route path="/downloads" element={<DownloadsPage />} />
       <Route path="/sdlsubr1250noida/login" element={<AdminLogin />} />
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
