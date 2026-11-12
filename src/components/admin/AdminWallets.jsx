@@ -1,10 +1,8 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatINR, formatDate } from "@/lib/sdlUtils";
 import NeuInput from "@/components/NeuInput";
-import { Wallet, CheckCircle2, XCircle, Clock, X, ArrowDownLeft, ArrowUpRight, Loader2, Settings2, Plus, ScanLine } from "lucide-react";
+import { CheckCircle2, XCircle, X, ArrowDownLeft, ArrowUpRight, Loader2, Plus, ScanLine } from "lucide-react";
 import { createNotification } from "@/lib/notifications";
 
 export default function AdminWallets() {
@@ -16,7 +14,7 @@ export default function AdminWallets() {
   const [search, setSearch] = useState("");
 
   const loadData = async () => {
-    const t = await db.entities.WalletTransaction.list("-created_date", 200);
+    const t = await base44.entities.WalletTransaction.list("-created_date", 200);
     setTxns(t);
     setLoading(false);
   };
@@ -112,7 +110,7 @@ function WalletActionModal({ action, onClose, onDone }) {
     try {
       const data = { status: isApprove ? "completed" : "rejected", processed_date: new Date().toISOString() };
       if (!isApprove) data.admin_reason = reason;
-      await db.entities.WalletTransaction.update(txn.id, data);
+      await base44.entities.WalletTransaction.update(txn.id, data);
       let nTitle = "Wallet Update", nMsg = "";
       if (isApprove) {
         if (txn.type === "deposit") { nTitle = "Deposit Approved"; nMsg = `Your wallet deposit of ${formatINR(txn.amount)} has been approved.`; }
@@ -160,7 +158,7 @@ function AdjustWalletModal({ onClose, onDone }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    db.entities.User.list("-created_date", 300).then((list) => setUsers(list.filter((u) => u.role !== "admin"))).catch(() => {});
+    base44.entities.User.list("-created_date", 300).then((list) => setUsers(list.filter((u) => u.role !== "admin"))).catch(() => {});
   }, []);
 
   const submit = async () => {
@@ -168,7 +166,7 @@ function AdjustWalletModal({ onClose, onDone }) {
     if (!amount || Number(amount) <= 0) { alert("Enter a valid amount"); return; }
     setLoading(true);
     try {
-      await db.entities.WalletTransaction.create({
+      await base44.entities.WalletTransaction.create({
         user_id: userId,
         type: "admin_adjustment",
         amount: Number(amount),

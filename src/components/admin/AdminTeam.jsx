@@ -1,9 +1,7 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import NeuInput from "@/components/NeuInput";
-import { UsersRound, Plus, Trash2, X, Loader2, Upload, Camera, ChevronUp, ChevronDown, Pencil } from "lucide-react";
+import { Plus, Trash2, X, Loader2, Camera, ChevronUp, ChevronDown, Pencil } from "lucide-react";
 
 export default function AdminTeam() {
   const [team, setTeam] = useState([]);
@@ -13,7 +11,7 @@ export default function AdminTeam() {
   const [reordering, setReordering] = useState(false);
 
   const loadData = async () => {
-    const t = await db.entities.TeamMember.list("order");
+    const t = await base44.entities.TeamMember.list("order");
     setTeam(t);
     setLoading(false);
   };
@@ -22,7 +20,7 @@ export default function AdminTeam() {
 
   const remove = async (id) => {
     if (!confirm("Remove this team member?")) return;
-    await db.entities.TeamMember.delete(id);
+    await base44.entities.TeamMember.delete(id);
     loadData();
   };
 
@@ -34,7 +32,7 @@ export default function AdminTeam() {
     setTeam(newTeam);
     setReordering(true);
     try {
-      await db.entities.TeamMember.bulkUpdate(
+      await base44.entities.TeamMember.bulkUpdate(
         newTeam.map((m, i) => ({ id: m.id, order: i }))
       );
     } catch (e) { alert("Failed to reorder"); loadData(); }
@@ -100,7 +98,7 @@ function AddMemberModal({ team, onClose, onDone }) {
   const handlePhoto = async (e) => {
     const file = e.target.files[0]; if (!file) return;
     setUploading(true);
-    try { const { file_url } = await db.integrations.Core.UploadFile({ file }); setPhoto(file_url); }
+    try { const { file_url } = await base44.integrations.Core.UploadFile({ file }); setPhoto(file_url); }
     catch { alert("Upload failed"); } finally { setUploading(false); }
   };
 
@@ -111,10 +109,10 @@ function AddMemberModal({ team, onClose, onDone }) {
       if (upiEnabled) {
         const others = (team || []).filter((m) => m.upi_enabled);
         if (others.length) {
-          await db.entities.TeamMember.bulkUpdate(others.map((m) => ({ id: m.id, upi_enabled: false })));
+          await base44.entities.TeamMember.bulkUpdate(others.map((m) => ({ id: m.id, upi_enabled: false })));
         }
       }
-      await db.entities.TeamMember.create({ name, education, role, photo_url: photo, upi_id: upiId.trim(), upi_enabled: upiEnabled });
+      await base44.entities.TeamMember.create({ name, education, role, photo_url: photo, upi_id: upiId.trim(), upi_enabled: upiEnabled });
       onDone();
     } catch (e) { alert("Failed"); } finally { setLoading(false); }
   };
@@ -170,7 +168,7 @@ function EditMemberModal({ member, team, onClose, onDone }) {
   const handlePhoto = async (e) => {
     const file = e.target.files[0]; if (!file) return;
     setUploading(true);
-    try { const { file_url } = await db.integrations.Core.UploadFile({ file }); setPhoto(file_url); }
+    try { const { file_url } = await base44.integrations.Core.UploadFile({ file }); setPhoto(file_url); }
     catch { alert("Upload failed"); } finally { setUploading(false); }
   };
 
@@ -181,10 +179,10 @@ function EditMemberModal({ member, team, onClose, onDone }) {
       if (upiEnabled) {
         const others = (team || []).filter((m) => m.id !== member.id && m.upi_enabled);
         if (others.length) {
-          await db.entities.TeamMember.bulkUpdate(others.map((m) => ({ id: m.id, upi_enabled: false })));
+          await base44.entities.TeamMember.bulkUpdate(others.map((m) => ({ id: m.id, upi_enabled: false })));
         }
       }
-      await db.entities.TeamMember.update(member.id, { name, education, role, photo_url: photo, upi_id: upiId.trim(), upi_enabled: upiEnabled });
+      await base44.entities.TeamMember.update(member.id, { name, education, role, photo_url: photo, upi_id: upiId.trim(), upi_enabled: upiEnabled });
       onDone();
     } catch (e) { alert("Failed"); } finally { setLoading(false); }
   };

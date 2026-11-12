@@ -17,7 +17,8 @@ import AdminMessages from "@/components/admin/AdminMessages";
 import AdminEmailFlows from "@/components/admin/AdminEmailFlows";
 import AdminReminders from "@/components/admin/AdminReminders";
 import AdminTraffic from "@/components/admin/AdminTraffic";
-import { LayoutDashboard, Users, HandCoins, Wallet, MessageSquare, MessageCircle, UsersRound, Settings, LogOut, Handshake, Mail, Bell, Activity } from "lucide-react";
+import AdminAppUpdate from "@/components/admin/AdminAppUpdate";
+import { LayoutDashboard, Users, HandCoins, Wallet, MessageSquare, MessageCircle, UsersRound, Settings, LogOut, Handshake, Mail, Bell, Activity, Smartphone } from "lucide-react";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -30,6 +31,7 @@ const tabs = [
   { id: "reminders", label: "Reminders", icon: Bell },
   { id: "emails", label: "Email Flows", icon: Mail },
   { id: "traffic", label: "App Traffic", icon: Activity },
+  { id: "appupdate", label: "App Update", icon: Smartphone },
   { id: "team", label: "Team", icon: UsersRound },
   { id: "settings", label: "Settings", icon: Settings },
 ];
@@ -115,6 +117,7 @@ export default function Admin({ user }) {
         {tab === "reminders" && <AdminReminders />}
         {tab === "emails" && <AdminEmailFlows />}
         {tab === "traffic" && <AdminTraffic />}
+        {tab === "appupdate" && <AdminAppUpdate />}
         {tab === "team" && <AdminTeam />}
         {tab === "settings" && <AdminSettings />}
       </div>

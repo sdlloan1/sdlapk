@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { Mail, ToggleLeft, ToggleRight, Save, Loader2, CheckCircle2 } from "lucide-react";
 import PromotionalEmailComposer from "@/components/admin/PromotionalEmailComposer";
 
@@ -17,12 +15,12 @@ export default function AdminEmailFlows() {
     const load = async () => {
       try {
         const [s, u] = await Promise.all([
-          db.entities.AppSettings.list(),
-          db.entities.User.filter({ role: "user" }),
+          base44.entities.AppSettings.list(),
+          base44.entities.User.filter({ role: "user" }),
         ]);
         setSettings(s[0]);
         setUsers(u);
-        setActiveUserCount(u.filter((x) => (x.account_status || "active") === "active").length);
+        setActiveUserCount(u.filter((x) => x.account_status === "active").length);
       } catch (e) {}
       setLoading(false);
     };
@@ -37,7 +35,7 @@ export default function AdminEmailFlows() {
   const saveToggles = async () => {
     setSavingToggles(true);
     try {
-      await db.entities.AppSettings.update(settings.id, {
+      await base44.entities.AppSettings.update(settings.id, {
         loan_email_enabled: settings.loan_email_enabled !== false,
         closure_email_enabled: settings.closure_email_enabled !== false,
       });

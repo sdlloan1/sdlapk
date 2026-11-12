@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import NeuInput from "@/components/NeuInput";
-import { FileText, Eye } from "lucide-react";
+import { FileText } from "lucide-react";
 
 const DEFAULTS = {
   font: "helvetica",

@@ -5,11 +5,11 @@ import { useNavigate } from "react-router-dom";
 
 import NeuButton from "@/components/NeuButton";
 import NeuInput from "@/components/NeuInput";
-import { SDL_LOGO, formatDate, formatAddress, getShareableDomain } from "@/lib/sdlUtils";
+import { formatDate, formatAddress, getShareableDomain } from "@/lib/sdlUtils";
 import {
   User, Phone, CreditCard, Mail, Wallet, CalendarDays, Users, Share2, MessageSquare,
   Upload, Camera, Check, Loader2, X, Shield, Info, ChevronRight, Copy, MessageCircle, LogOut,
-  FileText, ChevronDown, ChevronUp, Download, Instagram, MapPin, Handshake, Send, Plus, ArrowLeft, Clock, Trash2
+  FileText, ChevronDown, ChevronUp, Download, Instagram, MapPin, Handshake, Send, Plus, ArrowLeft, Trash2
   } from "lucide-react";
   import { Image } from "@/components/ui/image";
   import DownloadAppModal from "@/components/DownloadAppModal";

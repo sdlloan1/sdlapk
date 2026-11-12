@@ -1,5 +1,3 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, HandCoins, ShieldCheck, Users, Wallet, Sparkles, Download } from "lucide-react";
@@ -97,8 +95,6 @@ export default function Onboarding() {
             <button
               key={i}
               onClick={() => setStep(i)}
-              aria-label={`Go to slide ${i + 1}: ${slides[i].title}`}
-              aria-current={i === step ? "step" : undefined}
               className={`h-2 rounded-full transition-all duration-300 ${i === step ? "w-8 sdl-gradient" : "w-2 neu-inset-sm"}`}
             />
           ))}

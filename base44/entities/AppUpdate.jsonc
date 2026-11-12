@@ -1,0 +1,53 @@
+{
+  "name": "AppUpdate",
+  "type": "object",
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "download_url": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "reminder_days": {
+      "type": "number",
+      "default": 2
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "sent_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "version",
+    "download_url"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": null,
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

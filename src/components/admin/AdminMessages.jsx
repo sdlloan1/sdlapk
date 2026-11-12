@@ -1,11 +1,9 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatDate, formatINR, getWhatsappUrl } from "@/lib/sdlUtils";
 import { repaymentReminderMessage } from "@/lib/whatsappMessages";
 import AdminNotepad from "@/components/admin/AdminNotepad";
-import { Search, Copy, Check, MessageCircle, X, RefreshCw, Loader2, Bell, CalendarClock } from "lucide-react";
+import { Search, Copy, Check, MessageCircle, X, RefreshCw, Loader2, Bell } from "lucide-react";
 
 const TYPE_LABELS = {
   kyc_approved: { label: "KYC Approved", color: "bg-green-100 text-sdl-green" },
@@ -47,12 +45,12 @@ export default function AdminMessages() {
     try {
       // WhatsApp messages are kept for 24 hours only — older ones are removed here.
       const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-      await db.entities.WhatsAppLog.deleteMany({ created_date: { $lt: cutoff } }).catch(() => {});
+      await base44.entities.WhatsAppLog.deleteMany({ created_date: { $lt: cutoff } }).catch(() => {});
 
       const [l, s, dueLoans] = await Promise.all([
-        db.entities.WhatsAppLog.list("-created_date", 200),
-        db.entities.AppSettings.list(),
-        db.entities.LoanApplication.filter({ status: "disbursed", due_date: tomorrowStr() }, "-created_date"),
+        base44.entities.WhatsAppLog.list("-created_date", 200),
+        base44.entities.AppSettings.list(),
+        base44.entities.LoanApplication.filter({ status: "disbursed", due_date: tomorrowStr() }, "-created_date"),
       ]);
       setLogs(l);
       setSettings(s[0]);

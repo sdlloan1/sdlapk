@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatAddress } from "@/lib/sdlUtils";
 import { User, Mail, Phone, CreditCard, Wallet, MapPin, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 
@@ -21,7 +19,7 @@ export default function PartnerRequestForm({ user, onSubmitted }) {
   const submit = async () => {
     setLoading(true);
     try {
-      await db.functions.invoke("submitPartnerRequest", {});
+      await base44.functions.invoke("submitPartnerRequest", {});
       setDone(true);
     } catch (e) {
       alert("Failed to submit: " + (e.response?.data?.error || e.message || "error"));

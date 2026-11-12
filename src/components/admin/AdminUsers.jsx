@@ -1,10 +1,7 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatINR } from "@/lib/sdlUtils";
-import {
-  Users, CheckCircle2, XCircle, Clock, Pause, Search
+import { CheckCircle2, XCircle, Clock, Pause, Search
 } from "lucide-react";
 import UserDetailTabs from "@/components/admin/UserDetailTabs";
 
@@ -16,7 +13,7 @@ export default function AdminUsers() {
   const [search, setSearch] = useState("");
 
   const loadData = async () => {
-    const list = await db.entities.User.list("-created_date", 200);
+    const list = await base44.entities.User.list("-created_date", 200);
     setUsers(list.filter((u) => u.role !== "admin"));
     setLoading(false);
   };

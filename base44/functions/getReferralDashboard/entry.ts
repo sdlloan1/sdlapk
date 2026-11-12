@@ -1,21 +1,20 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await db.auth.me();
+    const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const myMobile = String(user.mobile_number || '').trim();
-    if (!myMobile) return Response.json({ friends: [], loans: [] });
+    // Referral downline is keyed by the server-resolved referrer id recorded at
+    // KYC time (never by a client-supplied mobile number).
+    if (!user.id) return Response.json({ friends: [], loans: [] });
 
-    const friends = await db.asServiceRole.entities.User.filter({ referrer_mobile: myMobile });
+    const friends = await base44.asServiceRole.entities.User.filter({ referrer_id: user.id });
 
     const loans = [];
     for (const f of friends) {
-      const fls = await db.asServiceRole.entities.LoanApplication.filter({ user_id: f.id }, '-created_date');
+      const fls = await base44.asServiceRole.entities.LoanApplication.filter({ user_id: f.id }, '-created_date');
       for (const l of fls) {
         loans.push({
           id: l.id,

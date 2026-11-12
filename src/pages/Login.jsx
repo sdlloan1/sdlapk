@@ -1,8 +1,6 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-
+import { base44 } from "@/api/base44Client";
 import NeuAuthLayout from "@/components/NeuAuthLayout";
 import NeuInput from "@/components/NeuInput";
 import PasswordInput from "@/components/PasswordInput";
@@ -20,8 +18,8 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await db.auth.loginViaEmailPassword(email, password);
-      window.location.href = import.meta.env.BASE_URL;
+      await base44.auth.loginViaEmailPassword(email, password);
+      window.location.href = "/";
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {

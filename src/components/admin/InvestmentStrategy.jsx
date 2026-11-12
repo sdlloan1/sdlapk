@@ -1,11 +1,9 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect, useMemo } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatINR, calcRepayment } from "@/lib/sdlUtils";
 import NeuInput from "@/components/NeuInput";
 import { PiggyBank, TrendingUp, Wallet, Calculator, Target, Loader2, ChevronDown } from "lucide-react";
-import { ComposedChart, Area, Bar, Line, ReferenceLine, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { ComposedChart, Area, Bar, ReferenceLine, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 
 export default function InvestmentStrategy() {
   const [settings, setSettings] = useState(null);
@@ -15,7 +13,7 @@ export default function InvestmentStrategy() {
   const [showTable, setShowTable] = useState(false);
 
   useEffect(() => {
-    db.entities.AppSettings.list().then((s) => setSettings(s[0] || {})).catch(() => setSettings({}));
+    base44.entities.AppSettings.list().then((s) => setSettings(s[0] || {})).catch(() => setSettings({}));
   }, []);
 
   const firstCycle = useMemo(() => calcRepayment(principal, settings || {}), [principal, settings]);

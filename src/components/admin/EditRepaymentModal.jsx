@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatINR, formatDate, isOverdue, daysOverdue, calcOverdue, payableTotal } from "@/lib/sdlUtils";
 import { createNotification } from "@/lib/notifications";
 import NeuInput from "@/components/NeuInput";
@@ -37,7 +35,7 @@ export default function EditRepaymentModal({ loan, settings, onClose, onSaved })
           update.original_repayment_amount = loan.original_repayment_amount || loan.repayment_amount;
         }
       }
-      await db.entities.LoanApplication.update(loan.id, update);
+      await base44.entities.LoanApplication.update(loan.id, update);
       try {
         await createNotification({
           user_id: loan.user_id,

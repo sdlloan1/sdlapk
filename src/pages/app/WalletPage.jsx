@@ -1,13 +1,11 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import NeuButton from "@/components/NeuButton";
 import NeuInput from "@/components/NeuInput";
-import { formatINR, upiQrUrl, formatDate, monthKey, resolvePayee } from "@/lib/sdlUtils";
+import { formatINR, upiQrUrl, formatDate, resolvePayee } from "@/lib/sdlUtils";
 import {
   Wallet as WalletIcon, ArrowDownLeft, ArrowUpRight, Plus, Upload, Loader2,
-  CheckCircle2, X, Clock, Gift, Sparkles, Lock, Unlock, ChevronDown
+  CheckCircle2, X, Clock, Gift, Sparkles, Lock, ChevronDown
 } from "lucide-react";
 import NeuPageLoader from "@/components/NeuPageLoader";
 import UpiVerifiedBadge from "@/components/UpiVerifiedBadge";
@@ -23,8 +21,8 @@ export default function WalletPage({ user, settings, active }) {
   const loadData = async () => {
     setLoading(true);
     const [txns, t] = await Promise.all([
-      db.entities.WalletTransaction.filter({ user_id: user.id }, "-created_date"),
-      db.entities.TeamMember.list("order"),
+      base44.entities.WalletTransaction.filter({ user_id: user.id }, "-created_date"),
+      base44.entities.TeamMember.list("order"),
     ]);
     setTransactions(txns);
     setTeam(t);
@@ -208,7 +206,7 @@ function WalletModal({ type, settings, payee, balance, user, onClose, onSubmitte
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) { alert("JPG/PNG only"); return; }
     setUploading(true);
     try {
-      const { file_url } = await db.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setScreenshot(file_url);
     } catch { alert("Upload failed"); }
     finally { setUploading(false); }
@@ -220,7 +218,7 @@ function WalletModal({ type, settings, payee, balance, user, onClose, onSubmitte
     if (!isDeposit && amount > balance) { alert("Insufficient balance"); return; }
     setSubmitting(true);
     try {
-      await db.entities.WalletTransaction.create({
+      await base44.entities.WalletTransaction.create({
         user_id: user.id,
         type: isDeposit ? "deposit" : "withdrawal",
         amount: Number(amount),

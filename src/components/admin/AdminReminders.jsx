@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatDate, formatINR } from "@/lib/sdlUtils";
 import { Bell, Copy, Check, MessageCircle, RefreshCw, Loader2, Mail } from "lucide-react";
 
@@ -38,9 +36,9 @@ export default function AdminReminders() {
   const load = async () => {
     // Reminders are kept for 24 hours only — older ones are removed here.
     const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    await db.entities.RepaymentReminder.deleteMany({ created_date: { $lt: cutoff } }).catch(() => {});
+    await base44.entities.RepaymentReminder.deleteMany({ created_date: { $lt: cutoff } }).catch(() => {});
 
-    const res = await db.entities.RepaymentReminder.list("-created_date", 200);
+    const res = await base44.entities.RepaymentReminder.list("-created_date", 200);
     setItems(res);
     setLoading(false);
   };
@@ -48,7 +46,7 @@ export default function AdminReminders() {
   useEffect(() => {
     (async () => {
       // Generates today's reminders; emails only leave inside the 8–10 AM IST window.
-      try { await db.functions.invoke("sendRepaymentReminders", {}); } catch (e) {}
+      try { await base44.functions.invoke("sendRepaymentReminders", {}); } catch (e) {}
       load();
     })();
   }, []);

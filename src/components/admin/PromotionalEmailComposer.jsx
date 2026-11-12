@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState } from "react";
-
+import { base44 } from "@/api/base44Client";
 import NeuInput from "@/components/NeuInput";
 import { Send, Eye, Loader2, X, Users, User, AlertCircle, CheckCircle2, Mail, Code, FileText } from "lucide-react";
 
@@ -18,13 +16,13 @@ export default function PromotionalEmailComposer({ users, activeUserCount }) {
   const [sendResult, setSendResult] = useState(null);
 
   const kycIncompleteCount = users.filter((u) => u.kyc_status !== "approved").length;
-  const kycApprovedCount = users.filter((u) => u.kyc_status === "approved").length;
+  const allUserCount = users.filter((u) => u.email).length;
 
   const recipientCount =
     recipientType === "single" ? (selectedUserId ? 1 : 0)
     : recipientType === "kyc_incomplete" ? kycIncompleteCount
     : recipientType === "active_loans" ? activeUserCount
-    : kycApprovedCount;
+    : allUserCount;
 
   const buildHtml = () => {
     if (bodyMode === "plain") {
@@ -42,14 +40,14 @@ export default function PromotionalEmailComposer({ users, activeUserCount }) {
     if (recipientType !== "single" && recipientCount === 0) { alert("No recipients found in this category"); return; }
 
     const confirmSend = recipientType === "all"
-      ? window.confirm(`This will send an email to ALL ${recipientCount} KYC-approved users. Continue?`)
+      ? window.confirm(`This will send an email to ALL ${recipientCount} registered users. Continue?`)
       : true;
     if (!confirmSend) return;
 
     setSending(true);
     setSendResult(null);
     try {
-      const res = await db.functions.invoke("sendPromotionalEmail", {
+      const res = await base44.functions.invoke("sendPromotionalEmail", {
         recipientType,
         userId: recipientType === "single" ? selectedUserId : undefined,
         subject: subject.trim(),
@@ -68,8 +66,8 @@ export default function PromotionalEmailComposer({ users, activeUserCount }) {
   const recipientOptions = [
     { id: "single", label: "Single User", icon: User, desc: "Select one specific user" },
     { id: "kyc_incomplete", label: "KYC Incomplete", icon: AlertCircle, desc: "Users with pending/incomplete KYC" },
-    { id: "active_loans", label: "Active Users", icon: Users, desc: "All users with an active account" },
-    { id: "all", label: "All Users", icon: Mail, desc: "Every user whose KYC is approved" },
+    { id: "active_loans", label: "Active Users", icon: Users, desc: "Users whose account is active" },
+    { id: "all", label: "All Users", icon: Mail, desc: "Every registered user" },
   ];
 
   return (

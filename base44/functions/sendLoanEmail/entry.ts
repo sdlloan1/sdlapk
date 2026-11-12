@@ -1,5 +1,3 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 import { emailHeader, emailFooter, buildRawMessage } from "../../shared/emailTemplate.ts";
 
@@ -82,7 +80,7 @@ function closureEmail({ borrowerName }) {
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await db.auth.me();
+    const user = await base44.auth.me();
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
     if (user.role !== "admin") return Response.json({ error: "Forbidden" }, { status: 403 });
 
@@ -90,14 +88,14 @@ Deno.serve(async (req) => {
     const { loanId, emailType } = body;
     if (!loanId || !emailType) return Response.json({ error: "loanId and emailType required" }, { status: 400 });
 
-    const loan = await db.asServiceRole.entities.LoanApplication.get(loanId);
+    const loan = await base44.asServiceRole.entities.LoanApplication.get(loanId);
     if (!loan) return Response.json({ error: "Loan not found" }, { status: 404 });
 
-    const borrower = await db.asServiceRole.entities.User.get(loan.user_id);
+    const borrower = await base44.asServiceRole.entities.User.get(loan.user_id);
     if (!borrower) return Response.json({ error: "Borrower not found" }, { status: 404 });
 
     // Check if this email flow is enabled
-    const settingsList = await db.asServiceRole.entities.AppSettings.list();
+    const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     const appSettings = settingsList[0] || {};
     if (emailType === "closure" && appSettings.closure_email_enabled === false) {
       return Response.json({ success: true, skipped: true, message: "Closure email is disabled" });
@@ -123,7 +121,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { accessToken } = await db.asServiceRole.connectors.getConnection("gmail");
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection("gmail");
     const rawMessage = buildRawMessage(
       borrower.email,
       "shubhdhanlakshmifund@gmail.com",

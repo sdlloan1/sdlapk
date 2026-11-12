@@ -1,19 +1,17 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await db.auth.me();
+    const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
     // Get Google Sheets OAuth token (shared connector — builder's account)
-    const { accessToken } = await db.asServiceRole.connectors.getConnection("googlesheets");
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection("googlesheets");
 
     // Fetch all loans
-    const loans = await db.asServiceRole.entities.LoanApplication.list("-created_date", 1000);
+    const loans = await base44.asServiceRole.entities.LoanApplication.list("-created_date", 1000);
 
     const statusLabels = {
       pending_disbursement: "Pending Disbursement",
@@ -63,7 +61,7 @@ export default async function(req) {
       l.repayment_amount || 0,
       l.due_date || "",
       statusLabels[l.status] || l.status || "",
-      formatDate(l.created_date),
+      formatDate(l.loan_date || l.created_date),
       formatDate(l.disbursed_date),
       formatDate(l.repaid_date),
       l.user_upi_id || "",

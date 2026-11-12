@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState } from "react";
-
+import { base44 } from "@/api/base44Client";
 import NeuInput from "@/components/NeuInput";
 import { MapPin, Building2, Loader2 } from "lucide-react";
 
@@ -16,7 +14,7 @@ export default function AddressFields({ value = {}, onChange }) {
     if (val.length === 6) {
       setPinLoading(true);
       try {
-        const response = await db.functions.invoke("lookupPincode", { pincode: val });
+        const response = await base44.functions.invoke("lookupPincode", { pincode: val });
         if (response.data?.city) {
           onChange("city", response.data.city);
           onChange("state", response.data.state);

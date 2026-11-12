@@ -1,13 +1,11 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState } from "react";
-
+import { base44 } from "@/api/base44Client";
 import NeuButton from "@/components/NeuButton";
 import NeuInput from "@/components/NeuInput";
 import PaymentAppsGrid from "@/components/PaymentAppsGrid";
 import { generatePartnerAgreementPdf } from "@/lib/partnerAgreementPdf";
 import { formatINR, upiQrUrl } from "@/lib/sdlUtils";
-import { FileDown, CheckCircle2, Upload, Loader2, X, ArrowLeft, ArrowRight, Lock } from "lucide-react";
+import { FileDown, CheckCircle2, Upload, Loader2, X, ArrowLeft, ArrowRight } from "lucide-react";
 
 export default function PartnerDepositModal({ user, settings, onClose, onSubmitted }) {
   const [step, setStep] = useState(1);
@@ -24,7 +22,7 @@ export default function PartnerDepositModal({ user, settings, onClose, onSubmitt
     const doc = await generatePartnerAgreementPdf({ user, settings, amount });
     const blob = doc.output("blob");
     const file = new File([blob], `SDL_Partner_Agreement_${Date.now()}.pdf`, { type: "application/pdf" });
-    const { file_url } = await db.integrations.Core.UploadFile({ file });
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setPdfUrl(file_url);
     return file_url;
   };
@@ -47,7 +45,7 @@ export default function PartnerDepositModal({ user, settings, onClose, onSubmitt
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) { alert("JPG/PNG only"); return; }
     setUploading(true);
     try {
-      const { file_url } = await db.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setScreenshot(file_url);
     } catch { alert("Upload failed"); }
     finally { setUploading(false); }
@@ -57,7 +55,7 @@ export default function PartnerDepositModal({ user, settings, onClose, onSubmitt
     if (!screenshot) { alert("Please upload payment screenshot"); return; }
     setLoading(true);
     try {
-      await db.entities.PartnerDeposit.create({
+      await base44.entities.PartnerDeposit.create({
         user_id: user.id,
         user_name: user.display_name || user.full_name,
         amount: Number(amount),
