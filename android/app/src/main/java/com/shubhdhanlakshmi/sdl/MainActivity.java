@@ -23,6 +23,9 @@ public class MainActivity extends BridgeActivity {
         // resized for the soft keyboard) and take over the system bars below.
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
+        // Keep the notification poll alive once the app goes to the background.
+        SdlBackgroundService.start(this);
+
         // Draw edge to edge and hide the status and navigation bars.
         WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
         hideSystemBars();
