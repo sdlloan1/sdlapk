@@ -1,9 +1,7 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import NeuInput from "@/components/NeuInput";
-import { Settings, Save, Loader2, X, ScrollText, FileText, Mail, Shield, Info, CreditCard, Smartphone, Bell } from "lucide-react";
+import { Settings, Save, Loader2, ScrollText, FileText, Mail, Shield, Info, CreditCard, Smartphone, Bell } from "lucide-react";
 import AgreementStyleEditor from "@/components/admin/AgreementStyleEditor";
 
 export default function AdminSettings() {
@@ -13,7 +11,7 @@ export default function AdminSettings() {
   const [tab, setTab] = useState("content");
 
   useEffect(() => {
-    db.entities.AppSettings.list().then((s) => { setSettings(s[0]); setLoading(false); });
+    base44.entities.AppSettings.list().then((s) => { setSettings(s[0]); setLoading(false); });
   }, []);
 
   const update = (field, value) => setSettings({ ...settings, [field]: value });
@@ -22,7 +20,7 @@ export default function AdminSettings() {
     setSaving(true);
     try {
       const { id, ...data } = settings;
-      await db.entities.AppSettings.update(id, data);
+      await base44.entities.AppSettings.update(id, data);
       alert("Settings saved!");
     } catch (e) { alert("Failed"); } finally { setSaving(false); }
   };

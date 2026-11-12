@@ -1,12 +1,10 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatINR, formatDate, isOverdue, daysOverdue, upiQrUrl } from "@/lib/sdlUtils";
 import NeuInput from "@/components/NeuInput";
 import {
-  CheckCircle2, XCircle, Clock, X, Loader2, Handshake, ArrowDownLeft, ArrowUpRight,
-  FileDown, FileImage, Gift, TrendingUp, ChevronRight, Search, Upload
+  CheckCircle2, XCircle, X, Loader2, Handshake,
+  FileDown, FileImage, ChevronRight, Search, Upload
 } from "lucide-react";
 import PartnerDetailModal from "@/components/admin/PartnerDetailModal";
 
@@ -18,11 +16,11 @@ export default function AdminPartners() {
 
   const loadCounts = async () => {
     const [reqs, deps, wds, pendingLoans, verifyLoans] = await Promise.all([
-      db.entities.PartnerRequest.filter({ status: "pending" }).catch(() => []),
-      db.entities.PartnerDeposit.filter({ status: "pending" }).catch(() => []),
-      db.entities.PartnerWithdrawal.filter({ status: "pending" }).catch(() => []),
-      db.entities.LoanApplication.filter({ status: "pending_disbursement" }).catch(() => []),
-      db.entities.LoanApplication.filter({ status: "pending_verification" }).catch(() => []),
+      base44.entities.PartnerRequest.filter({ status: "pending" }).catch(() => []),
+      base44.entities.PartnerDeposit.filter({ status: "pending" }).catch(() => []),
+      base44.entities.PartnerWithdrawal.filter({ status: "pending" }).catch(() => []),
+      base44.entities.LoanApplication.filter({ status: "pending_disbursement" }).catch(() => []),
+      base44.entities.LoanApplication.filter({ status: "pending_verification" }).catch(() => []),
     ]);
     setCounts({
       requests: reqs.length,
@@ -91,7 +89,7 @@ function PartnersTab({ onSelect, search }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    db.entities.User.list("-created_date", 200).then((users) => {
+    base44.entities.User.list("-created_date", 200).then((users) => {
       setPartners(users.filter((u) => u.partner_status === "approved"));
       setLoading(false);
     }).catch(() => setLoading(false));
@@ -139,7 +137,7 @@ function RequestsTab({ onUpdate, search }) {
   const [action, setAction] = useState(null);
 
   const load = async () => {
-    const list = await db.entities.PartnerRequest.list("-created_date", 100);
+    const list = await base44.entities.PartnerRequest.list("-created_date", 100);
     setRequests(list);
     setLoading(false);
   };
@@ -155,13 +153,13 @@ function RequestsTab({ onUpdate, search }) {
   }
 
   const approve = async (req) => {
-    await db.entities.PartnerRequest.update(req.id, { status: "approved" });
-    await db.entities.User.update(req.user_id, { partner_status: "approved" });
+    await base44.entities.PartnerRequest.update(req.id, { status: "approved" });
+    await base44.entities.User.update(req.user_id, { partner_status: "approved" });
     load(); onUpdate();
   };
   const reject = async (req, reason) => {
-    await db.entities.PartnerRequest.update(req.id, { status: "rejected", rejection_reason: reason });
-    await db.entities.User.update(req.user_id, { partner_status: "rejected", rejection_reason: reason });
+    await base44.entities.PartnerRequest.update(req.id, { status: "rejected", rejection_reason: reason });
+    await base44.entities.User.update(req.user_id, { partner_status: "rejected", rejection_reason: reason });
     setAction(null); load(); onUpdate();
   };
 
@@ -209,19 +207,19 @@ function DepositsTab({ onUpdate }) {
   const [action, setAction] = useState(null);
 
   const load = async () => {
-    const list = await db.entities.PartnerDeposit.list("-created_date", 100);
+    const list = await base44.entities.PartnerDeposit.list("-created_date", 100);
     setDeposits(list);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
   const approve = async (d) => {
-    await db.entities.PartnerDeposit.update(d.id, { status: "approved", approved_date: new Date().toISOString() });
-    await db.entities.AdminCapital.create({ type: "deposit", amount: d.amount, related_user_id: d.user_id, description: `Partner deposit from ${d.user_name}` });
+    await base44.entities.PartnerDeposit.update(d.id, { status: "approved", approved_date: new Date().toISOString() });
+    await base44.entities.AdminCapital.create({ type: "deposit", amount: d.amount, related_user_id: d.user_id, description: `Partner deposit from ${d.user_name}` });
     load(); onUpdate();
   };
   const reject = async (d, reason) => {
-    await db.entities.PartnerDeposit.update(d.id, { status: "rejected", rejection_reason: reason });
+    await base44.entities.PartnerDeposit.update(d.id, { status: "rejected", rejection_reason: reason });
     setAction(null); load(); onUpdate();
   };
 
@@ -278,18 +276,18 @@ function WithdrawalsTab({ onUpdate }) {
   const [action, setAction] = useState(null);
 
   const load = async () => {
-    const list = await db.entities.PartnerWithdrawal.list("-created_date", 100);
+    const list = await base44.entities.PartnerWithdrawal.list("-created_date", 100);
     setWithdrawals(list);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
 
   const approve = async (w) => {
-    await db.entities.PartnerWithdrawal.update(w.id, { status: "approved", paid_date: new Date().toISOString() });
+    await base44.entities.PartnerWithdrawal.update(w.id, { status: "approved", paid_date: new Date().toISOString() });
     load(); onUpdate();
   };
   const reject = async (w, reason) => {
-    await db.entities.PartnerWithdrawal.update(w.id, { status: "rejected", rejection_reason: reason });
+    await base44.entities.PartnerWithdrawal.update(w.id, { status: "rejected", rejection_reason: reason });
     setAction(null); load(); onUpdate();
   };
 
@@ -342,8 +340,8 @@ function AssignLoansTab({ onUpdate }) {
 
   const load = async () => {
     const [pendingLoans, allUsers] = await Promise.all([
-      db.entities.LoanApplication.filter({ status: "pending_disbursement" }, "-created_date"),
-      db.entities.User.list("-created_date", 200),
+      base44.entities.LoanApplication.filter({ status: "pending_disbursement" }, "-created_date"),
+      base44.entities.User.list("-created_date", 200),
     ]);
     setLoans(pendingLoans);
     setPartners(allUsers.filter((u) => u.partner_status === "approved"));
@@ -354,7 +352,7 @@ function AssignLoansTab({ onUpdate }) {
   const assign = async (loan, screenshotUrl) => {
     const partnerId = selectedPartner[loan.id];
     const profit = Math.round(loan.amount * 0.1);
-    await db.entities.PartnerLoanAssignment.create({
+    await base44.entities.PartnerLoanAssignment.create({
       loan_id: loan.id,
       partner_id: partnerId,
       loan_amount: loan.amount,
@@ -366,7 +364,7 @@ function AssignLoansTab({ onUpdate }) {
     });
     const updateData = { status: "disbursed", disbursed_date: new Date().toISOString() };
     if (screenshotUrl) updateData.disbursement_screenshot = screenshotUrl;
-    await db.entities.LoanApplication.update(loan.id, updateData);
+    await base44.entities.LoanApplication.update(loan.id, updateData);
     load(); onUpdate();
   };
 
@@ -431,7 +429,7 @@ function AssignDisburseModal({ loan, partnerName, onClose, onConfirm }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await db.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setScreenshot(file_url);
     } catch (err) { alert("Upload failed"); }
     finally { setUploading(false); }
@@ -490,8 +488,8 @@ function SettleTab({ onUpdate }) {
 
   const load = async () => {
     const [verifyLoans, allAssignments] = await Promise.all([
-      db.entities.LoanApplication.filter({ status: "pending_verification" }, "-created_date"),
-      db.entities.PartnerLoanAssignment.filter({ status: "active" }, "-created_date"),
+      base44.entities.LoanApplication.filter({ status: "pending_verification" }, "-created_date"),
+      base44.entities.PartnerLoanAssignment.filter({ status: "active" }, "-created_date"),
     ]);
     setLoans(verifyLoans);
     setAssignments(allAssignments);
@@ -505,12 +503,12 @@ function SettleTab({ onUpdate }) {
     const overdue = isOverdue(loan.due_date);
     const odDays = overdue ? daysOverdue(loan.due_date) : 0;
     const odBonus = overdue ? Math.round((loan.amount * odDays * 0.5) / 100) : 0;
-    await db.entities.PartnerLoanAssignment.update(assignment.id, {
+    await base44.entities.PartnerLoanAssignment.update(assignment.id, {
       status: "repaid",
       repaid_date: new Date().toISOString(),
       overdue_bonus: odBonus,
     });
-    await db.entities.LoanApplication.update(loan.id, { status: "repaid", repaid_date: new Date().toISOString() });
+    await base44.entities.LoanApplication.update(loan.id, { status: "repaid", repaid_date: new Date().toISOString() });
     load(); onUpdate();
   };
 
@@ -560,9 +558,9 @@ function HistoryTab() {
   useEffect(() => {
     (async () => {
       const [deps, wds, assigns] = await Promise.all([
-        db.entities.PartnerDeposit.list("-created_date", 100),
-        db.entities.PartnerWithdrawal.list("-created_date", 100),
-        db.entities.PartnerLoanAssignment.list("-created_date", 100),
+        base44.entities.PartnerDeposit.list("-created_date", 100),
+        base44.entities.PartnerWithdrawal.list("-created_date", 100),
+        base44.entities.PartnerLoanAssignment.list("-created_date", 100),
       ]);
       setDeposits(deps);
       setWithdrawals(wds);

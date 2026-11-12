@@ -17,6 +17,10 @@
     "loan_id": {
       "type": "string"
     },
+    "loan_date": {
+      "type": "string",
+      "format": "date-time"
+    },
     "amount": {
       "type": "number"
     },

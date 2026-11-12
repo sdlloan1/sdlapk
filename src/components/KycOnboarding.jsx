@@ -1,17 +1,14 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
-import { useNavigate } from "react-router-dom";
-import { logoutToLogin } from "@/lib/logout";
-
+import { base44 } from "@/api/base44Client";
 import NeuButton from "@/components/NeuButton";
 import NeuInput from "@/components/NeuInput";
 import {
   User, Phone, CreditCard, Mail, Upload, Wallet, CalendarDays,
-  Users, ArrowRight, ArrowLeft, CheckCircle2, Image as ImageIcon, Loader2, XCircle
+  Users, ArrowRight, ArrowLeft, CheckCircle2, Loader2, XCircle
 } from "lucide-react";
 import AddressFields from "@/components/AddressFields";
+import { useNavigate } from "react-router-dom";
+import { logoutToLogin } from "@/lib/logout";
 
 function FileUploadBox({ label, value, onChange }) {
   const [uploading, setUploading] = useState(false);
@@ -24,7 +21,7 @@ function FileUploadBox({ label, value, onChange }) {
     }
     setUploading(true);
     try {
-      const { file_url } = await db.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
       onChange(file_url);
     } catch (err) {
       alert("Upload failed. Please try again.");
@@ -73,7 +70,7 @@ export default function KycOnboarding({ user, onComplete }) {
   const attemptsLeft = Math.max(0, dailyLimit - attemptsToday);
 
   useEffect(() => {
-    db.entities.AppSettings.list()
+    base44.entities.AppSettings.list()
       .then((s) => {
         const lim = Number(s[0]?.kyc_daily_limit);
         if (lim > 0) setDailyLimit(lim);
@@ -87,14 +84,14 @@ export default function KycOnboarding({ user, onComplete }) {
 
   // Step 1
   const [fullName, setFullName] = useState(draft.fullName || "");
-  const [mobile, setMobile] = useState(draft.mobile || "");
-  const [pan, setPan] = useState(draft.pan || "");
+  const [mobile, setMobile] = useState("");
+  const [pan, setPan] = useState("");
   const [email, setEmail] = useState(user.email || "");
   // Step 2
-  const [panCard, setPanCard] = useState(draft.panCard || "");
-  const [aadhaarFront, setAadhaarFront] = useState(draft.aadhaarFront || "");
-  const [aadhaarBack, setAadhaarBack] = useState(draft.aadhaarBack || "");
-  const [salarySlip, setSalarySlip] = useState(draft.salarySlip || "");
+  const [panCard, setPanCard] = useState("");
+  const [aadhaarFront, setAadhaarFront] = useState("");
+  const [aadhaarBack, setAadhaarBack] = useState("");
+  const [salarySlip, setSalarySlip] = useState("");
   // Step 3
   const [upiId, setUpiId] = useState(draft.upiId || "");
   const [salaryDate, setSalaryDate] = useState(draft.salaryDate || "");
@@ -103,12 +100,14 @@ export default function KycOnboarding({ user, onComplete }) {
   const [address, setAddress] = useState(draft.address || {});
   const updateAddress = (key, val) => setAddress((prev) => ({ ...prev, [key]: val }));
 
-  // Persist draft so users can resume after going back to login
+  // Persist only non-sensitive fields so a user can resume after going back to login.
+  // The PAN number, mobile number and identity-document URLs are never stored on device.
   useEffect(() => {
     try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({ fullName, mobile, pan, panCard, aadhaarFront, aadhaarBack, salarySlip, upiId, salaryDate, referrerName, referrerMobile, address }));
+      // This write also replaces any older draft that held sensitive fields.
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({ fullName, upiId, salaryDate, referrerName, referrerMobile, address }));
     } catch (e) {}
-  }, [fullName, mobile, pan, panCard, aadhaarFront, aadhaarBack, salarySlip, upiId, salaryDate, referrerName, referrerMobile, address]);
+  }, [fullName, upiId, salaryDate, referrerName, referrerMobile, address]);
 
   const validateStep1 = async () => {
     if (!fullName.trim()) return "Please enter your full name.";
@@ -121,9 +120,9 @@ export default function KycOnboarding({ user, onComplete }) {
     if (!address.city?.trim()) return "Please enter your city.";
     if (!address.state?.trim()) return "Please enter your state.";
     try {
-      const existingMobile = await db.entities.User.filter({ mobile_number: mobile });
+      const existingMobile = await base44.entities.User.filter({ mobile_number: mobile });
       if (existingMobile.some((u) => u.id !== user.id)) return "This mobile number is already registered.";
-      const existingPan = await db.entities.User.filter({ pan_number: panUpper });
+      const existingPan = await base44.entities.User.filter({ pan_number: panUpper });
       if (existingPan.some((u) => u.id !== user.id)) return "This PAN number is already registered.";
     } catch (e) {
       // Non-admin users cannot query other users; uniqueness is enforced server-side on save.
@@ -146,7 +145,7 @@ export default function KycOnboarding({ user, onComplete }) {
     if (!/^\d{10}$/.test(referrerMobile)) return "Referrer mobile must be 10 digits.";
     if (referrerMobile === mobile) return "Referrer cannot be yourself.";
     try {
-      const res = await db.functions.invoke("verifyReferrer", { mobile_number: referrerMobile });
+      const res = await base44.functions.invoke("verifyReferrer", { mobile_number: referrerMobile });
       const data = res.data || res;
       if (!data.found) return data.error || "Referrer not found. Only a registered SDL user's number can be used.";
     } catch (e) {
@@ -175,7 +174,7 @@ export default function KycOnboarding({ user, onComplete }) {
     setError("");
     try {
       const today = new Date().toISOString().split("T")[0];
-      const res = await db.functions.invoke("submitKyc", {
+      const res = await base44.functions.invoke("submitKyc", {
         full_name: fullName.trim(),
         display_name: fullName.trim(),
         mobile_number: mobile,

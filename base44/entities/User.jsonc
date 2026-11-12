@@ -28,6 +28,16 @@
     "referrer_mobile": {
       "type": "string"
     },
+    "referrer_id": {
+      "type": "string",
+      "rls": {
+        "update": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
+    },
     "address_line1": {
       "type": "string"
     },

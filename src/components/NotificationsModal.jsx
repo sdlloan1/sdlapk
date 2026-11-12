@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatDate } from "@/lib/sdlUtils";
 import { Bell, X, CheckCircle2, Clock, Wallet, TrendingUp, AlertTriangle, Info } from "lucide-react";
 
@@ -20,11 +18,11 @@ export default function NotificationsModal({ user, onClose }) {
   useEffect(() => {
     (async () => {
       try {
-        const list = await db.entities.Notification.filter({ user_id: user.id }, "-created_date", 50);
+        const list = await base44.entities.Notification.filter({ user_id: user.id }, "-created_date", 50);
         setItems(list);
         const unread = list.filter((n) => !n.read);
         if (unread.length) {
-          await Promise.all(unread.map((n) => db.entities.Notification.update(n.id, { read: true })));
+          await Promise.all(unread.map((n) => base44.entities.Notification.update(n.id, { read: true })));
         }
       } catch (e) {
         // ignore

@@ -1,20 +1,17 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect, useRef } from "react";
-
-import NeuButton from "@/components/NeuButton";
+import { base44 } from "@/api/base44Client";
 import NeuInput from "@/components/NeuInput";
 import ConfettiPopup from "@/components/ConfettiPopup";
 import { generateAgreementPdf } from "@/lib/agreementPdf";
 import ReferralCard from "@/components/ReferralCard";
-import { SDL_LOGO, formatINR, calcRepayment, getDueDate, formatDate, isOverdue, daysOverdue, generateLoanId } from "@/lib/sdlUtils";
+import { formatINR, calcRepayment, getDueDate, formatDate, isOverdue, generateLoanId } from "@/lib/sdlUtils";
 import { ensureDueDateNotifications } from "@/lib/notifications";
 import ChargeInfoButton from "@/components/ChargeInfoButton";
 import AllLoansModal from "@/components/AllLoansModal";
 import NeuPageLoader from "@/components/NeuPageLoader";
 import {
   Clock, CheckCircle2, XCircle, TrendingUp, HandCoins, ArrowRight, ArrowLeft,
-  FileDown, Users, Loader2, Sparkles, Wallet, X, ChevronRight
+  FileDown, Loader2, X, ChevronRight
 } from "lucide-react";
 
 export default function LoanPage({ user, onUserUpdate, settings, active }) {
@@ -29,8 +26,8 @@ export default function LoanPage({ user, onUserUpdate, settings, active }) {
   const loadData = async () => {
     setLoading(true);
     const [myLoans, referralRes] = await Promise.all([
-      db.entities.LoanApplication.filter({ user_id: user.id }, "-created_date"),
-      db.functions.invoke("getReferralDashboard").catch(() => null),
+      base44.entities.LoanApplication.filter({ user_id: user.id }, "-created_date"),
+      base44.functions.invoke("getReferralDashboard").catch(() => null),
     ]);
     setLoans(myLoans);
     ensureDueDateNotifications(user, myLoans);
@@ -97,7 +94,7 @@ export default function LoanPage({ user, onUserUpdate, settings, active }) {
           onClose={async () => {
             setShowCongrats(false);
             try {
-              await db.auth.updateMe({ limit_acknowledged: user.loan_limit });
+              await base44.auth.updateMe({ limit_acknowledged: user.loan_limit });
               onUserUpdate();
             } catch (e) {
               // limit acknowledgement is best-effort
@@ -175,7 +172,7 @@ export default function LoanPage({ user, onUserUpdate, settings, active }) {
   );
 
   async function handleReapply() {
-    await db.functions.invoke("submitKyc", { reapply: true });
+    await base44.functions.invoke("submitKyc", { reapply: true });
     onUserUpdate();
   }
 }
@@ -203,7 +200,7 @@ function LoanRow({ loan }) {
       <div>
         <p className="text-sm font-semibold text-slate-700">{formatINR(loan.amount)}</p>
         {loan.loan_id && <p className="text-[10px] font-mono text-sdl-orange">ID: {loan.loan_id}</p>}
-        <p className="text-[10px] text-slate-400">Loan Date: {formatDate(loan.created_date)}</p>
+        <p className="text-[10px] text-slate-400">Loan Date: {formatDate(loan.loan_date || loan.created_date)}</p>
         <p className="text-[10px] text-slate-400">Due: {formatDate(loan.due_date)}</p>
       </div>
       <div className="flex flex-col items-end gap-1">
@@ -319,12 +316,15 @@ function ApplyLoanModal({ user, settings, availableLimit, onClose, onSubmitted }
   const dueDate = getDueDate(user.salary_date);
 
   const loanIdRef = React.useRef(null);
+  // One timestamp for both the agreement date and the stored loan date.
+  const requestDateRef = React.useRef(null);
   const generatePdf = async () => {
     if (!loanIdRef.current) loanIdRef.current = generateLoanId(user);
-    const doc = await generateAgreementPdf({ user, settings, principal, interest, portalCharge, processingFee, savingsBack, totalCharges, total, dueDate, loanId: loanIdRef.current, requestDate: new Date().toISOString() });
+    if (!requestDateRef.current) requestDateRef.current = new Date().toISOString();
+    const doc = await generateAgreementPdf({ user, settings, principal, interest, portalCharge, processingFee, savingsBack, totalCharges, total, dueDate, loanId: loanIdRef.current, requestDate: requestDateRef.current });
     const blob = doc.output("blob");
     const file = new File([blob], `SDL_Agreement_${Date.now()}.pdf`, { type: "application/pdf" });
-    const { file_url } = await db.integrations.Core.UploadFile({ file });
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
     setPdfUrl(file_url);
     setPdfBlobUrl(URL.createObjectURL(blob));
     return file_url;
@@ -347,12 +347,13 @@ function ApplyLoanModal({ user, settings, availableLimit, onClose, onSubmitted }
     if (!termsAccepted) { alert("Please accept the terms and conditions to continue."); return; }
     setLoading(true);
     try {
-      const loan = await db.entities.LoanApplication.create({
+      const loan = await base44.entities.LoanApplication.create({
         user_id: user.id,
         user_name: user.display_name || user.full_name,
         user_mobile: user.mobile_number,
         user_upi_id: user.upi_id,
         loan_id: loanIdRef.current || generateLoanId(user),
+        loan_date: requestDateRef.current || new Date().toISOString(),
         amount: principal,
         interest_amount: totalCharges,
         repayment_amount: total,

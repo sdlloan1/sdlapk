@@ -1,11 +1,8 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect, useRef } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatDate } from "@/lib/sdlUtils";
-import NeuInput from "@/components/NeuInput";
 import { createNotification } from "@/lib/notifications";
-import { MessageSquare, X, Send, CheckCircle2, Clock, FileImage, Search } from "lucide-react";
+import { X, Send, CheckCircle2, Clock, Search } from "lucide-react";
 
 export default function AdminTickets() {
   const [tickets, setTickets] = useState([]);
@@ -14,7 +11,7 @@ export default function AdminTickets() {
   const [search, setSearch] = useState("");
 
   const loadData = async () => {
-    const t = await db.entities.SupportTicket.list("-created_date", 100);
+    const t = await base44.entities.SupportTicket.list("-created_date", 100);
     setTickets(t);
     setLoading(false);
   };
@@ -103,7 +100,7 @@ function TicketModal({ ticket, onClose, onDone }) {
     try {
       const newMsg = { sender: "admin", message: response.trim(), timestamp: new Date().toISOString() };
       const updatedConvo = [...convo, newMsg];
-      await db.entities.SupportTicket.update(ticket.id, {
+      await base44.entities.SupportTicket.update(ticket.id, {
         conversation: JSON.stringify(updatedConvo),
         admin_response: response.trim(),
         status: "responded",
@@ -123,7 +120,7 @@ function TicketModal({ ticket, onClose, onDone }) {
   const closeTicket = async () => {
     setLoading(true);
     try {
-      await db.entities.SupportTicket.update(ticket.id, { status: "closed" });
+      await base44.entities.SupportTicket.update(ticket.id, { status: "closed" });
       onDone();
     } catch (e) { alert("Failed"); } finally { setLoading(false); }
   };

@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { Loader2, X, Check } from "lucide-react";
 
 const V = 280;
@@ -129,7 +127,7 @@ export default function PhotoAdjustModal({ file, onClose, onSaved }) {
       if (img) ctx.drawImage(img, offset.x, offset.y, iw * scale, ih * scale);
       const blob = await new Promise((res) => canvas.toBlob(res, "image/jpeg", 0.92));
       const f = new File([blob], `profile_${Date.now()}.jpg`, { type: "image/jpeg" });
-      const { file_url } = await db.integrations.Core.UploadFile({ file: f });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file: f });
       onSaved(file_url);
     } catch (err) {
       alert("Save failed. Please try again.");

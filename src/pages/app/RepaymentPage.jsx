@@ -1,8 +1,6 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
-import { SDL_LOGO, formatINR, upiQrUrl, formatDate, isOverdue, daysOverdue, calcOverdue, resolvePayee } from "@/lib/sdlUtils";
+import { base44 } from "@/api/base44Client";
+import { formatINR, upiQrUrl, formatDate, isOverdue, daysOverdue, calcOverdue, resolvePayee } from "@/lib/sdlUtils";
 import { downloadAllBrandedQrs } from "@/lib/qrBranded";
 import ChargeInfoButton from "@/components/ChargeInfoButton";
 import AllLoansModal from "@/components/AllLoansModal";
@@ -24,8 +22,8 @@ export default function RepaymentPage({ user, settings, active }) {
   const loadData = async () => {
     setLoading(true);
     const [myLoans, t] = await Promise.all([
-      db.entities.LoanApplication.filter({ user_id: user.id }, "-created_date"),
-      db.entities.TeamMember.list("order"),
+      base44.entities.LoanApplication.filter({ user_id: user.id }, "-created_date"),
+      base44.entities.TeamMember.list("order"),
     ]);
     setLoans(myLoans);
     setTeam(t);
@@ -143,7 +141,7 @@ function RepaymentCard({ loan, settings, onRepay }) {
           <div>
             <p className="text-sm font-bold text-slate-700">{formatINR(loan.amount)} Loan</p>
             {loan.loan_id && <p className="text-[10px] font-mono text-sdl-orange font-medium">ID: {loan.loan_id}</p>}
-            <p className="text-[10px] text-slate-400">Loan Date: {formatDate(loan.created_date)}</p>
+            <p className="text-[10px] text-slate-400">Loan Date: {formatDate(loan.loan_date || loan.created_date)}</p>
             <p className="text-[10px] text-slate-400">Repayment Date: {formatDate(loan.due_date)}</p>
           </div>
         </div>
@@ -233,7 +231,7 @@ function RepayModal({ loan, payee, settings, onClose, onSubmitted }) {
     if (!["image/jpeg", "image/png", "image/jpg"].includes(file.type)) { alert("JPG/PNG only"); return; }
     setUploadingIndex(idx);
     try {
-      const { file_url } = await db.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setPayments((prev) => {
         const updated = [...prev];
         updated[idx] = { ...updated[idx], screenshot: file_url };
@@ -267,7 +265,7 @@ function RepayModal({ loan, payee, settings, onClose, onSubmitted }) {
     setSubmitting(true);
     try {
       const shots = payments.map((p) => ({ screenshot: p.screenshot, amount: p.amount }));
-      await db.functions.invoke("submitRepaymentProof", { loanId: loan.id, screenshots: shots });
+      await base44.functions.invoke("submitRepaymentProof", { loanId: loan.id, screenshots: shots });
       setDone(true);
     } catch (e) { alert("Failed: " + (e.response?.data?.error || e.message || "error")); }
     finally { setSubmitting(false); }

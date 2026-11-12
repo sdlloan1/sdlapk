@@ -1,9 +1,7 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatINR, formatDate, isOverdue, daysOverdue } from "@/lib/sdlUtils";
-import { X, CheckCircle2, FileDown, FileImage, LockOpen, Lock, Loader2 } from "lucide-react";
+import { X, CheckCircle2, FileDown, FileImage, LockOpen, Lock } from "lucide-react";
 
 export default function PartnerDetailModal({ partner, onClose }) {
   const [tab, setTab] = useState("assign");
@@ -13,11 +11,11 @@ export default function PartnerDetailModal({ partner, onClose }) {
 
   const loadData = async () => {
     const [reqs, deps, wds, assigns, allLoans] = await Promise.all([
-      db.entities.PartnerRequest.filter({ user_id: partner.id }).catch(() => []),
-      db.entities.PartnerDeposit.filter({ user_id: partner.id }).catch(() => []),
-      db.entities.PartnerWithdrawal.filter({ user_id: partner.id }).catch(() => []),
-      db.entities.PartnerLoanAssignment.filter({ partner_id: partner.id }).catch(() => []),
-      db.entities.LoanApplication.list("-created_date", 200).catch(() => []),
+      base44.entities.PartnerRequest.filter({ user_id: partner.id }).catch(() => []),
+      base44.entities.PartnerDeposit.filter({ user_id: partner.id }).catch(() => []),
+      base44.entities.PartnerWithdrawal.filter({ user_id: partner.id }).catch(() => []),
+      base44.entities.PartnerLoanAssignment.filter({ partner_id: partner.id }).catch(() => []),
+      base44.entities.LoanApplication.list("-created_date", 200).catch(() => []),
     ]);
     const activeLoanIds = assigns.filter((a) => a.status === "active").map((a) => a.loan_id);
     const settleLoans = allLoans.filter((l) => activeLoanIds.includes(l.id) && l.status === "pending_verification");
@@ -33,10 +31,10 @@ export default function PartnerDetailModal({ partner, onClose }) {
       const overdue = isOverdue(loan.due_date);
       const odDays = overdue ? daysOverdue(loan.due_date) : 0;
       const odBonus = overdue ? Math.round((loan.amount * odDays * 0.5) / 100) : 0;
-      await db.entities.PartnerLoanAssignment.update(assignment.id, {
+      await base44.entities.PartnerLoanAssignment.update(assignment.id, {
         status: "repaid", repaid_date: new Date().toISOString(), overdue_bonus: odBonus,
       });
-      await db.entities.LoanApplication.update(loan.id, { status: "repaid", repaid_date: new Date().toISOString() });
+      await base44.entities.LoanApplication.update(loan.id, { status: "repaid", repaid_date: new Date().toISOString() });
       await loadData();
     } catch (e) { alert("Failed to settle"); } finally { setActionLoading(false); }
   };
@@ -46,7 +44,7 @@ export default function PartnerDetailModal({ partner, onClose }) {
     setActionLoading(true);
     try {
       const unlockedDate = new Date(Date.now() - 190 * 24 * 60 * 60 * 1000).toISOString();
-      await db.entities.PartnerDeposit.update(deposit.id, { approved_date: unlockedDate });
+      await base44.entities.PartnerDeposit.update(deposit.id, { approved_date: unlockedDate });
       await loadData();
     } catch (e) { alert("Failed to unlock"); } finally { setActionLoading(false); }
   };
@@ -55,7 +53,7 @@ export default function PartnerDetailModal({ partner, onClose }) {
     if (!confirm(`Lock capital of ${formatINR(deposit.amount)} for this partner? This enforces the 6-month lock period.`)) return;
     setActionLoading(true);
     try {
-      await db.entities.PartnerDeposit.update(deposit.id, { approved_date: new Date().toISOString() });
+      await base44.entities.PartnerDeposit.update(deposit.id, { approved_date: new Date().toISOString() });
       await loadData();
     } catch (e) { alert("Failed to lock"); } finally { setActionLoading(false); }
   };

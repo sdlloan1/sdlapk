@@ -1,11 +1,9 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatINR, formatDate, formatAddress, getWhatsappUrl } from "@/lib/sdlUtils";
 import NeuInput from "@/components/NeuInput";
 import WhatsAppShareModal from "@/components/WhatsAppShareModal";
-import { kycApprovedMessage, kycDonePendingLimitMessage, limitIncreasedMessage } from "@/lib/whatsappMessages";
+import { kycDonePendingLimitMessage, limitIncreasedMessage } from "@/lib/whatsappMessages";
 import { logWhatsApp } from "@/lib/logWhatsApp";
 import {
   CheckCircle2, XCircle, Pause, Play, X, TrendingUp, FileImage,
@@ -36,7 +34,7 @@ export default function UserDetailTabs({ user, onClose, onUpdated }) {
   const saveBlockDate = async () => {
     setLoading(true);
     try {
-      await db.entities.User.update(user.id, {
+      await base44.entities.User.update(user.id, {
         kyc_blocked_until: blockDate || "",
         kyc_attempt_count: 0,
         kyc_attempt_date: "",
@@ -49,19 +47,19 @@ export default function UserDetailTabs({ user, onClose, onUpdated }) {
     (async () => {
       try {
         const [userLoans, userTxns, s] = await Promise.all([
-          db.entities.LoanApplication.filter({ user_id: user.id }, "-created_date"),
-          db.entities.WalletTransaction.filter({ user_id: user.id }, "-created_date"),
-          db.entities.AppSettings.list(),
+          base44.entities.LoanApplication.filter({ user_id: user.id }, "-created_date"),
+          base44.entities.WalletTransaction.filter({ user_id: user.id }, "-created_date"),
+          base44.entities.AppSettings.list(),
         ]);
         setLoans(userLoans);
         setWalletTxns(userTxns);
         setSettings(s[0]);
 
         if (user.mobile_number) {
-          const friends = await db.entities.User.filter({ referrer_mobile: user.mobile_number });
+          const friends = await base44.entities.User.filter({ referrer_mobile: user.mobile_number });
           const refLoans = [];
           for (const f of friends) {
-            const fls = await db.entities.LoanApplication.filter({ user_id: f.id }, "-created_date");
+            const fls = await base44.entities.LoanApplication.filter({ user_id: f.id }, "-created_date");
             fls.forEach((l) => refLoans.push({ ...l, friendName: f.display_name || f.full_name, friendMobile: f.mobile_number }));
           }
           setReferrals({ friends, loans: refLoans });
@@ -73,7 +71,7 @@ export default function UserDetailTabs({ user, onClose, onUpdated }) {
   const update = async (data) => {
     setLoading(true);
     try {
-      await db.entities.User.update(user.id, data);
+      await base44.entities.User.update(user.id, data);
       onUpdated();
     } catch (e) { alert("Failed"); } finally { setLoading(false); }
   };
@@ -82,7 +80,7 @@ export default function UserDetailTabs({ user, onClose, onUpdated }) {
     setLoading(true);
     try {
       const name = user.display_name || user.full_name || "User";
-      await db.entities.User.update(user.id, { kyc_status: "approved", account_status: "active" });
+      await base44.entities.User.update(user.id, { kyc_status: "approved", account_status: "active" });
       const waMessage = kycDonePendingLimitMessage(name, getWhatsappUrl(settings));
       await logWhatsApp({ user_id: user.id, user_name: name, user_mobile: user.mobile_number, message_type: "kyc_approved", message: waMessage });
       setWaMsg({ message: waMessage, phone: user.mobile_number });
@@ -96,8 +94,8 @@ export default function UserDetailTabs({ user, onClose, onUpdated }) {
       const name = user.display_name || user.full_name || "User";
       const prevLimit = Number(user.loan_limit) || 0;
       const newLim = Number(newLimit);
-      await db.entities.User.update(user.id, { loan_limit: newLim });
-      try { await db.functions.invoke("sendLimitAssignedEmail", { userId: user.id, limit: newLim }); } catch (e) {}
+      await base44.entities.User.update(user.id, { loan_limit: newLim });
+      try { await base44.functions.invoke("sendLimitAssignedEmail", { userId: user.id, limit: newLim }); } catch (e) {}
       const waMessage = limitIncreasedMessage(name, newLim - prevLimit, newLim, getWhatsappUrl(settings));
       await logWhatsApp({ user_id: user.id, user_name: name, user_mobile: user.mobile_number, message_type: "limit_increased", message: waMessage });
       setWaMsg({ message: waMessage, phone: user.mobile_number });
@@ -123,7 +121,7 @@ export default function UserDetailTabs({ user, onClose, onUpdated }) {
   const saveEdit = async () => {
     setLoading(true);
     try {
-      await db.entities.User.update(user.id, editData);
+      await base44.entities.User.update(user.id, editData);
       setEditMode(false);
       onUpdated();
     } catch (e) { alert("Failed to save"); } finally { setLoading(false); }
@@ -136,10 +134,10 @@ export default function UserDetailTabs({ user, onClose, onUpdated }) {
     if (!file) return;
     setUploadingDoc(true);
     try {
-      const { file_url } = await db.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
       const updated = [...extraDocs, { url: file_url, name: file.name }];
       setExtraDocs(updated);
-      await db.entities.User.update(user.id, { additional_documents: JSON.stringify(updated) });
+      await base44.entities.User.update(user.id, { additional_documents: JSON.stringify(updated) });
       onUpdated();
     } catch (err) { alert("Upload failed"); }
     finally { setUploadingDoc(false); }
@@ -149,7 +147,7 @@ export default function UserDetailTabs({ user, onClose, onUpdated }) {
     const updated = extraDocs.filter((_, idx) => idx !== i);
     setExtraDocs(updated);
     try {
-      await db.entities.User.update(user.id, { additional_documents: JSON.stringify(updated) });
+      await base44.entities.User.update(user.id, { additional_documents: JSON.stringify(updated) });
       onUpdated();
     } catch (e) { alert("Failed"); }
   };

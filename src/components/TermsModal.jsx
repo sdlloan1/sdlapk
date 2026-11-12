@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import NeuButton from "@/components/NeuButton";
 import { ScrollText, Check } from "lucide-react";
 
@@ -13,14 +11,14 @@ export default function TermsModal({ user, onAccept }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    db.entities.AppSettings.list().then((s) => setSettings(s[0]));
+    base44.entities.AppSettings.list().then((s) => setSettings(s[0]));
   }, []);
 
   const handleAccept = async () => {
     if (!accepted) return;
     setLoading(true);
     try {
-      await db.entities.User.update(user.id, { terms_accepted: true });
+      await base44.entities.User.update(user.id, { terms_accepted: true });
       onAccept();
     } catch (e) {
       console.error(e);

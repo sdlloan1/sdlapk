@@ -1,5 +1,3 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 
 // Fields a borrower may supply about themselves during KYC.
@@ -26,7 +24,7 @@ function istDate(offsetMs = 0) {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await db.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
+    const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json().catch(() => ({}));
@@ -36,7 +34,7 @@ export default async function (req) {
       if (!["rejected", "hold"].includes(user.kyc_status || "")) {
         return Response.json({ error: "Re-apply is only available after a rejection." }, { status: 400 });
       }
-      await db.asServiceRole.entities.User.update(user.id, {
+      await base44.asServiceRole.entities.User.update(user.id, {
         kyc_status: "pending",
         rejection_reason: "",
       });
@@ -56,11 +54,11 @@ export default async function (req) {
       return Response.json({ error: `KYC submissions are blocked until ${blockedUntil}.` }, { status: 429 });
     }
 
-    const settingsList = await db.asServiceRole.entities.AppSettings.list();
+    const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     const dailyLimit = Number(settingsList?.[0]?.kyc_daily_limit) || 3;
 
     if (attempts >= dailyLimit) {
-      await db.asServiceRole.entities.User.update(user.id, { kyc_blocked_until: tomorrow });
+      await base44.asServiceRole.entities.User.update(user.id, { kyc_blocked_until: tomorrow });
       return Response.json({ error: `You have used all ${dailyLimit} KYC attempts for today.` }, { status: 429 });
     }
 
@@ -80,6 +78,26 @@ export default async function (req) {
     if (!/^\d{10}$/.test(String(patch.mobile_number))) {
       return Response.json({ error: "Enter a valid 10-digit mobile number." }, { status: 400 });
     }
+
+    // A mobile number belongs to one account only, so it cannot be claimed to
+    // inherit someone else's referral network.
+    const mobile = String(patch.mobile_number);
+    if (mobile !== String(user.mobile_number || "")) {
+      const mobileTaken = await base44.asServiceRole.entities.User.filter({ mobile_number: mobile });
+      if (mobileTaken.some((u) => u.id !== user.id)) {
+        return Response.json({ error: "This mobile number is already registered." }, { status: 400 });
+      }
+    }
+
+    // Resolve the referrer server-side to a real user id — the mobile number the
+    // client sends is never trusted as an identity key.
+    let referrerId = user.referrer_id || "";
+    const referrerMobile = String(patch.referrer_mobile || "").trim();
+    if (referrerMobile) {
+      const referrers = await base44.asServiceRole.entities.User.filter({ mobile_number: referrerMobile });
+      const referrer = referrers.find((u) => u.id !== user.id);
+      if (referrer) referrerId = referrer.id;
+    }
     if (!/^\d{1,2}$/.test(String(patch.salary_date))) {
       return Response.json({ error: "Enter a valid salary date." }, { status: 400 });
     }
@@ -88,6 +106,7 @@ export default async function (req) {
     const update = {
       ...patch,
       pan_number: pan,
+      referrer_id: referrerId,
       salary_date: Number(patch.salary_date),
       kyc_status: "pending",
       registration_complete: true,
@@ -96,7 +115,7 @@ export default async function (req) {
     };
     if (nextCount >= dailyLimit) update.kyc_blocked_until = tomorrow;
 
-    await db.asServiceRole.entities.User.update(user.id, update);
+    await base44.asServiceRole.entities.User.update(user.id, update);
 
     return Response.json({
       ok: true,

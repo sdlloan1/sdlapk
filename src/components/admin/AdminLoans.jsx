@@ -1,10 +1,7 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatINR, formatDate, upiQrUrl, isOverdue, daysOverdue, getWhatsappUrl, payableTotal } from "@/lib/sdlUtils";
-import NeuInput from "@/components/NeuInput";
-import { HandCoins, CheckCircle2, Clock, X, XCircle, Loader2, ScanLine, ArrowRight, ArrowLeft, Upload, FileDown, FileImage, Plus, FileAudio, Download, Pencil } from "lucide-react";
+import { CheckCircle2, X, XCircle, Loader2, ScanLine, Upload, FileDown, FileImage, Plus, FileAudio, Download, Pencil } from "lucide-react";
 import EditRepaymentModal from "@/components/admin/EditRepaymentModal";
 import { createNotification } from "@/lib/notifications";
 import WhatsAppShareModal from "@/components/WhatsAppShareModal";
@@ -26,15 +23,15 @@ export default function AdminLoans() {
 
   const loadData = async () => {
     const [l, s] = await Promise.all([
-      db.entities.LoanApplication.list("-created_date", 200),
-      db.entities.AppSettings.list(),
+      base44.entities.LoanApplication.list("-created_date", 200),
+      base44.entities.AppSettings.list(),
     ]);
     setLoans(l);
     setSettings(s[0]);
     const ids = [...new Set(l.map((loan) => loan.user_id).filter(Boolean))];
     if (ids.length) {
       try {
-        const users = await db.entities.User.filter({ id: { $in: ids } });
+        const users = await base44.entities.User.filter({ id: { $in: ids } });
         const map = {};
         users.forEach((u) => { map[u.id] = u; });
         setUsersMap(map);
@@ -48,7 +45,7 @@ export default function AdminLoans() {
   const handleExport = async () => {
     setExporting(true);
     try {
-      const res = await db.functions.invoke("exportToGoogleSheet", {});
+      const res = await base44.functions.invoke("exportToGoogleSheet", {});
       const data = res.data || res;
       if (data.url) window.open(data.url, "_blank");
       else alert("Export completed but no URL returned");
@@ -142,7 +139,7 @@ export default function AdminLoans() {
               </div>
               <div className="flex items-center justify-between text-xs text-slate-500 mb-3 gap-2">
                 <span className="min-w-0 truncate">UPI: {l.user_upi_id}</span>
-                <span className="shrink-0 whitespace-nowrap">Loan Date: {formatDate(l.created_date)}</span>
+                <span className="shrink-0 whitespace-nowrap">Loan Date: {formatDate(l.loan_date || l.created_date)}</span>
               </div>
               {(() => {
                 const extra = l.additional_files ? (() => { try { return JSON.parse(l.additional_files); } catch { return []; } })() : [];
@@ -300,7 +297,7 @@ function UserLoansModal({ user, onClose }) {
   useEffect(() => {
     if (user.is_partner && user.user_id) {
       setLoadingPartner(true);
-      db.entities.PartnerLoanAssignment.filter({ partner_id: user.user_id, status: "active" }, "-created_date")
+      base44.entities.PartnerLoanAssignment.filter({ partner_id: user.user_id, status: "active" }, "-created_date")
         .then((res) => setPartnerLoans(res))
         .catch(() => {})
         .finally(() => setLoadingPartner(false));
@@ -404,7 +401,7 @@ function ActionModal({ action, settings, onClose, onDone }) {
 
   useEffect(() => {
     if (isDisburse) {
-      db.entities.User.list("-created_date", 200).then((users) => {
+      base44.entities.User.list("-created_date", 200).then((users) => {
         setPartners(users.filter((u) => u.partner_status === "approved"));
       }).catch(() => {});
     }
@@ -415,7 +412,7 @@ function ActionModal({ action, settings, onClose, onDone }) {
     if (!file) return;
     setUploading(true);
     try {
-      const { file_url } = await db.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setScreenshot(file_url);
     } catch (err) { alert("Upload failed"); }
     finally { setUploading(false); }
@@ -426,7 +423,7 @@ function ActionModal({ action, settings, onClose, onDone }) {
     if (!file) return;
     setUploadingFile(true);
     try {
-      const { file_url } = await db.integrations.Core.UploadFile({ file });
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setAdditionalFiles((prev) => [...prev, { url: file_url, name: file.name }]);
     } catch (err) { alert("Upload failed"); }
     finally { setUploadingFile(false); }
@@ -438,13 +435,13 @@ function ActionModal({ action, settings, onClose, onDone }) {
       const updateData = { status: "disbursed", disbursed_date: new Date().toISOString() };
       if (screenshot) updateData.disbursement_screenshot = screenshot;
       if (additionalFiles.length > 0) updateData.additional_files = JSON.stringify(additionalFiles);
-      await db.entities.LoanApplication.update(loan.id, updateData);
-      await db.entities.AdminCapital.create({ type: "disbursement", amount: loan.amount, related_loan_id: loan.id, related_user_id: loan.user_id, description: `Disbursed to ${loan.user_name}` });
+      await base44.entities.LoanApplication.update(loan.id, updateData);
+      await base44.entities.AdminCapital.create({ type: "disbursement", amount: loan.amount, related_loan_id: loan.id, related_user_id: loan.user_id, description: `Disbursed to ${loan.user_name}` });
 
       // Assign to partner if selected
       if (selectedPartner) {
         const profit = Math.round((loan.amount * (Number(settings?.partner_profit_percentage) || 10)) / 100);
-        await db.entities.PartnerLoanAssignment.create({
+        await base44.entities.PartnerLoanAssignment.create({
           loan_id: loan.id,
           partner_id: selectedPartner,
           loan_amount: loan.amount,
@@ -456,7 +453,7 @@ function ActionModal({ action, settings, onClose, onDone }) {
         });
       }
 
-      try { await db.functions.invoke("sendLoanEmail", { loanId: loan.id, emailType: "approval" }); } catch (e) {}
+      try { await base44.functions.invoke("sendLoanEmail", { loanId: loan.id, emailType: "approval" }); } catch (e) {}
       await createNotification({ user_id: loan.user_id, title: "Loan Disbursed", message: `Your loan of ${formatINR(loan.amount)} has been disbursed to your UPI. Please repay ${formatINR(loan.repayment_amount)} by ${formatDate(loan.due_date)}.`, type: "loan", related_id: loan.id });
       const waMessage = loanDisbursedMessage(loan.user_name, loan.amount, loan.repayment_amount, formatDate(loan.due_date), loan.loan_id, getWhatsappUrl(settings));
       await logWhatsApp({ user_id: loan.user_id, user_name: loan.user_name, user_mobile: loan.user_mobile, loan_id: loan.loan_id, message_type: "loan_disbursed", message: waMessage });
@@ -468,7 +465,7 @@ function ActionModal({ action, settings, onClose, onDone }) {
     if (!reason.trim()) { alert("Please enter a reason for rejection"); return; }
     setLoading(true);
     try {
-      await db.entities.LoanApplication.update(loan.id, { status: "rejected", admin_rejection_reason: reason.trim() });
+      await base44.entities.LoanApplication.update(loan.id, { status: "rejected", admin_rejection_reason: reason.trim() });
       await createNotification({ user_id: loan.user_id, title: "Loan Rejected", message: `Your loan application of ${formatINR(loan.amount)} has been rejected. Reason: ${reason.trim()}`, type: "loan", related_id: loan.id });
       const waMessage = loanRejectedMessage(loan.user_name, loan.amount, reason.trim(), loan.loan_id, getWhatsappUrl(settings));
       await logWhatsApp({ user_id: loan.user_id, user_name: loan.user_name, user_mobile: loan.user_mobile, loan_id: loan.loan_id, message_type: "loan_rejected", message: waMessage });
@@ -480,18 +477,18 @@ function ActionModal({ action, settings, onClose, onDone }) {
     setLoading(true);
     try {
       // Mark loan as repaid
-      await db.entities.LoanApplication.update(loan.id, { status: "repaid", repaid_date: new Date().toISOString() });
-      await db.entities.AdminCapital.create({ type: "repayment_principal", amount: loan.amount, related_loan_id: loan.id, related_user_id: loan.user_id, description: `Principal from ${loan.user_name}` });
-      await db.entities.AdminCapital.create({ type: "repayment_interest", amount: loan.interest_amount, related_loan_id: loan.id, related_user_id: loan.user_id, description: `Interest from ${loan.user_name}` });
+      await base44.entities.LoanApplication.update(loan.id, { status: "repaid", repaid_date: new Date().toISOString() });
+      await base44.entities.AdminCapital.create({ type: "repayment_principal", amount: loan.amount, related_loan_id: loan.id, related_user_id: loan.user_id, description: `Principal from ${loan.user_name}` });
+      await base44.entities.AdminCapital.create({ type: "repayment_interest", amount: loan.interest_amount, related_loan_id: loan.id, related_user_id: loan.user_id, description: `Interest from ${loan.user_name}` });
 
       // Settle with SDL Partner if assigned
-      const assignments = await db.entities.PartnerLoanAssignment.filter({ loan_id: loan.id, status: "active" });
+      const assignments = await base44.entities.PartnerLoanAssignment.filter({ loan_id: loan.id, status: "active" });
       if (assignments.length > 0) {
         const assignment = assignments[0];
         const overdue = isOverdue(loan.due_date);
         const odDays = overdue ? daysOverdue(loan.due_date) : 0;
         const odBonus = overdue ? Math.round((loan.amount * odDays * (Number(settings?.partner_overdue_profit_percentage) || 0.5)) / 100) : 0;
-        await db.entities.PartnerLoanAssignment.update(assignment.id, {
+        await base44.entities.PartnerLoanAssignment.update(assignment.id, {
           status: "repaid",
           repaid_date: new Date().toISOString(),
           overdue_bonus: odBonus,
@@ -506,31 +503,31 @@ function ActionModal({ action, settings, onClose, onDone }) {
       }
 
       // Credit 1% savings back to user
-      const settings = (await db.entities.AppSettings.list())[0];
+      const settings = (await base44.entities.AppSettings.list())[0];
       const savingsPct = settings?.savings_percentage || 1;
       const savingsBack = Math.round((loan.amount * savingsPct) / 100);
-      await db.entities.WalletTransaction.create({ user_id: loan.user_id, type: "savings_back", amount: savingsBack, status: "completed", description: `Savings from loan repayment`, related_loan_id: loan.id });
+      await base44.entities.WalletTransaction.create({ user_id: loan.user_id, type: "savings_back", amount: savingsBack, status: "completed", description: `Savings from loan repayment`, related_loan_id: loan.id });
       // Credit 1% referral earning to referrer
       if (!loan.referrer_earning_credited && loan.referrer_id) {
         const referralEarning = Math.round((loan.amount * (settings?.referral_percentage || 1)) / 100);
-        await db.entities.WalletTransaction.create({ user_id: loan.referrer_id, type: "referral_earning", amount: referralEarning, status: "completed", description: `Referral earning from ${loan.user_name}`, related_loan_id: loan.id });
+        await base44.entities.WalletTransaction.create({ user_id: loan.referrer_id, type: "referral_earning", amount: referralEarning, status: "completed", description: `Referral earning from ${loan.user_name}`, related_loan_id: loan.id });
         await createNotification({ user_id: loan.referrer_id, title: "Referral Earning Credited", message: `You earned ${formatINR(referralEarning)} from ${loan.user_name}'s loan repayment.`, type: "wallet", related_id: loan.id });
-        await db.entities.LoanApplication.update(loan.id, { referrer_earning_credited: true });
+        await base44.entities.LoanApplication.update(loan.id, { referrer_earning_credited: true });
       } else {
-        const borrower = await db.entities.User.filter({ id: loan.user_id });
+        const borrower = await base44.entities.User.filter({ id: loan.user_id });
         if (borrower[0]?.referrer_mobile) {
-          const referrers = await db.entities.User.filter({ mobile_number: borrower[0].referrer_mobile });
+          const referrers = await base44.entities.User.filter({ mobile_number: borrower[0].referrer_mobile });
           if (referrers[0]) {
             const referralEarning = Math.round((loan.amount * (settings?.referral_percentage || 1)) / 100);
-            await db.entities.WalletTransaction.create({ user_id: referrers[0].id, type: "referral_earning", amount: referralEarning, status: "completed", description: `Referral earning from ${loan.user_name}`, related_loan_id: loan.id });
+            await base44.entities.WalletTransaction.create({ user_id: referrers[0].id, type: "referral_earning", amount: referralEarning, status: "completed", description: `Referral earning from ${loan.user_name}`, related_loan_id: loan.id });
             await createNotification({ user_id: referrers[0].id, title: "Referral Earning Credited", message: `You earned ${formatINR(referralEarning)} from ${loan.user_name}'s loan repayment.`, type: "wallet", related_id: loan.id });
-            await db.entities.LoanApplication.update(loan.id, { referrer_earning_credited: true, referrer_id: referrers[0].id });
+            await base44.entities.LoanApplication.update(loan.id, { referrer_earning_credited: true, referrer_id: referrers[0].id });
           }
         }
       }
-      try { await db.functions.invoke("sendLoanEmail", { loanId: loan.id, emailType: "closure" }); } catch (e) {}
+      try { await base44.functions.invoke("sendLoanEmail", { loanId: loan.id, emailType: "closure" }); } catch (e) {}
       await createNotification({ user_id: loan.user_id, title: "Loan Repaid & Closed", message: `Your loan repayment is confirmed. ${formatINR(savingsBack)} savings credited to your wallet.`, type: "loan", related_id: loan.id });
-      const u = await db.entities.User.filter({ id: loan.user_id });
+      const u = await base44.entities.User.filter({ id: loan.user_id });
       const waMessage = repaymentVerifiedMessage(loan.user_name, loan.repayment_amount, u[0]?.loan_limit || 0, loan.loan_id, getWhatsappUrl(settings));
       await logWhatsApp({ user_id: loan.user_id, user_name: loan.user_name, user_mobile: loan.user_mobile, loan_id: loan.loan_id, message_type: "repayment_verified", message: waMessage });
       setWaMsg({ message: waMessage, phone: loan.user_mobile });
@@ -541,7 +538,7 @@ function ActionModal({ action, settings, onClose, onDone }) {
     if (!reason.trim()) { alert("Please enter a reason for rejecting this repayment"); return; }
     setLoading(true);
     try {
-      await db.entities.LoanApplication.update(loan.id, { status: "disbursed", admin_rejection_reason: reason.trim() });
+      await base44.entities.LoanApplication.update(loan.id, { status: "disbursed", admin_rejection_reason: reason.trim() });
       await createNotification({ user_id: loan.user_id, title: "Repayment Rejected", message: `Your repayment proof for loan ${loan.loan_id || ""} was not accepted. Reason: ${reason.trim()}. Please re-upload a valid payment screenshot.`, type: "loan", related_id: loan.id });
       setWaMsg({ message: `🪔 *Repayment Rejected* 🙏\n\nDear *${loan.user_name}*,\n\nYour repayment proof for loan ${loan.loan_id || ""} was not accepted.\nReason: *${reason.trim()}*\n\nPlease re-upload a valid payment screenshot.\n\nVisit: ${getWhatsappUrl(settings)}\n\nRegards,\nSDL Team 🪔`, phone: loan.user_mobile });
     } catch (e) { alert("Failed"); } finally { setLoading(false); }

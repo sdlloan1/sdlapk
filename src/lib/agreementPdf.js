@@ -63,10 +63,27 @@ function ordinal(d) {
   return n + (s[(v - 20) % 10] || s[v] || s[0]);
 }
 
+// Agreement dates are rendered in IST so the signed date always matches the loan
+// date shown in the app, whatever timezone the borrower's device is set to.
+function istParts(dateObj) {
+  const d = dateObj instanceof Date ? dateObj : new Date(dateObj);
+  const s = d.toLocaleDateString("en-GB", { timeZone: "Asia/Kolkata", day: "2-digit", month: "2-digit", year: "numeric" });
+  const [day, month, year] = s.split("/").map(Number);
+  return { day, month, year };
+}
+
+const SHORT_MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
 function fmtExecDate(dateObj) {
   const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-  const d = dateObj instanceof Date ? dateObj : new Date(dateObj);
-  return `${ordinal(d.getDate())} day of ${months[d.getMonth()]}, ${d.getFullYear()}`;
+  const { day, month, year } = istParts(dateObj);
+  return `${ordinal(day)} day of ${months[month - 1]}, ${year}`;
+}
+
+// Same style as the app's formatDate (e.g. "13 Nov 2026").
+function fmtSignedDate(dateObj) {
+  const { day, month, year } = istParts(dateObj);
+  return `${String(day).padStart(2, "0")} ${SHORT_MONTHS[month - 1]} ${year}`;
 }
 
 function getStyle(settings) {
@@ -625,8 +642,8 @@ export async function generateAgreementPdf({ user, settings, principal, interest
   setFont(false);
   doc.setFontSize(7);
   doc.setTextColor(sr, sg, sb);
-  doc.text(`Date: ${formatDate(sigDate)}`, margin, y);
-  doc.text(`Date: ${formatDate(sigDate)}`, pageW - margin - 72, y);
+  doc.text(`Date: ${fmtSignedDate(sigDate)}`, margin, y);
+  doc.text(`Date: ${fmtSignedDate(sigDate)}`, pageW - margin - 72, y);
 
   // Footers on every page
   addFooterToAll();

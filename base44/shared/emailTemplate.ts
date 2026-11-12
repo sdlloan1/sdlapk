@@ -1,8 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 // Shared HTML email helpers used by SDL email-sending backend functions.
 
-// Emails render outside the app, so this one stays an absolute public URL.
 const LOGO_URL = "https://media.base44.com/images/public/6a65ccde323b932e9e9dc990/42c50083d_applogo.png";
 
 export function logoImg(size = 76) {

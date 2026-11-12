@@ -1,5 +1,3 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { buildRawMessage } from "../../shared/emailTemplate.ts";
 import {
@@ -45,7 +43,7 @@ function chunk(list, size) {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await db.auth
+    const user = await base44.auth
       .me()
       .catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
@@ -55,7 +53,7 @@ export default async function (req) {
     const force = body?.force === true;
     const dryRun = body?.dryRun === true;
 
-    const settingsList = await db.asServiceRole.entities.AppSettings.list();
+    const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     const settings = settingsList[0] || {};
     const websiteUrl = (settings.reminder_website_url || DEFAULT_WEBSITE).trim();
     const emailEnabled = settings.reminder_email_enabled !== false;
@@ -67,7 +65,7 @@ export default async function (req) {
     const withinWindow = hour >= 8 && hour < 11;
     const shouldSendEmail = emailEnabled && !dryRun && (force || withinWindow);
 
-    const loansPage = await db.asServiceRole.entities.LoanApplication.filter(
+    const loansPage = await base44.asServiceRole.entities.LoanApplication.filter(
       { status: { $in: ["disbursed", "overdue"] } },
       { limit: 500 }
     );
@@ -86,7 +84,7 @@ export default async function (req) {
       return Response.json({ generated: 0, sent: 0, failed: 0, message: "No reminders scheduled for today" });
     }
 
-    const existingPage = await db.asServiceRole.entities.RepaymentReminder.filter(
+    const existingPage = await base44.asServiceRole.entities.RepaymentReminder.filter(
       { loan_id: { $in: candidates.map((c) => c.loan.id) } },
       { limit: 500 }
     );
@@ -94,7 +92,7 @@ export default async function (req) {
 
     const userIds = [...new Set(candidates.map((c) => c.loan.user_id).filter(Boolean))];
     const users = userIds.length
-      ? await db.asServiceRole.entities.User.filter({ id: { $in: userIds } })
+      ? await base44.asServiceRole.entities.User.filter({ id: { $in: userIds } })
       : [];
     const userMap = {};
     users.forEach((u) => { userMap[u.id] = u; });
@@ -153,7 +151,7 @@ export default async function (req) {
     }
 
     if (records.length > 0) {
-      await db.asServiceRole.entities.RepaymentReminder.bulkCreate(records);
+      await base44.asServiceRole.entities.RepaymentReminder.bulkCreate(records);
     }
 
     if (!shouldSendEmail) {
@@ -167,7 +165,7 @@ export default async function (req) {
       });
     }
 
-    const pendingPage = await db.asServiceRole.entities.RepaymentReminder.filter(
+    const pendingPage = await base44.asServiceRole.entities.RepaymentReminder.filter(
       { email_status: { $in: force ? ["pending", "skipped"] : ["pending"] }, scheduled_for: today },
       { sort: "-created_date", limit: 100 }
     );
@@ -178,7 +176,7 @@ export default async function (req) {
 
     let accessToken = null;
     try {
-      const connection = await db.asServiceRole.connectors.getConnection("gmail");
+      const connection = await base44.asServiceRole.connectors.getConnection("gmail");
       accessToken = connection.accessToken;
     } catch (e) {
       accessToken = null;
@@ -243,8 +241,8 @@ export default async function (req) {
       });
     }
 
-    if (sentUpdates.length) await db.asServiceRole.entities.RepaymentReminder.bulkUpdate(sentUpdates);
-    if (failedUpdates.length) await db.asServiceRole.entities.RepaymentReminder.bulkUpdate(failedUpdates);
+    if (sentUpdates.length) await base44.asServiceRole.entities.RepaymentReminder.bulkUpdate(sentUpdates);
+    if (failedUpdates.length) await base44.asServiceRole.entities.RepaymentReminder.bulkUpdate(failedUpdates);
 
     return Response.json({ generated: records.length, sent, failed: failedUpdates.length });
   } catch (error) {

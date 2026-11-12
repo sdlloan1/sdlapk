@@ -1,6 +1,4 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
-
+import { base44 } from "@/api/base44Client";
 import { formatINR } from "@/lib/sdlUtils";
 
 export const DEFAULT_PAYMENT_APPS = [
@@ -22,7 +20,7 @@ export function parsePaymentApps(raw) {
 
 export async function createNotification({ user_id, title, message, type = "system", related_id = "" }) {
   try {
-    await db.entities.Notification.create({ user_id, title, message, type, read: false, related_id });
+    await base44.entities.Notification.create({ user_id, title, message, type, read: false, related_id });
   } catch (e) {
     // notifications are best-effort
   }
@@ -43,7 +41,7 @@ export async function ensureDueDateNotifications(user, loans) {
       .filter((x) => x.diffDays <= 3); // due within 3 days or overdue
     if (!candidates.length) return;
 
-    const existing = await db.entities.Notification.filter({ user_id: user.id }, "-created_date", 100);
+    const existing = await base44.entities.Notification.filter({ user_id: user.id }, "-created_date", 100);
     const have = new Set(existing.filter((n) => n.type === "due_date" && n.related_id).map((n) => n.related_id));
 
     for (const { loan, diffDays } of candidates) {

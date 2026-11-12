@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState } from "react";
-
+import { base44 } from "@/api/base44Client";
 import NeuInput from "@/components/NeuInput";
 import { formatINR } from "@/lib/sdlUtils";
 import { CheckCircle2, Loader2, X, Lock, Clock, Wallet, TrendingUp } from "lucide-react";
@@ -43,7 +41,7 @@ export default function PartnerWithdrawModal({ user, availableCapital, available
     if (!unlocked) { alert("Withdrawal is currently locked. Please wait until the lock period ends."); return; }
     setLoading(true);
     try {
-      await db.entities.PartnerWithdrawal.create({
+      await base44.entities.PartnerWithdrawal.create({
         user_id: user.id,
         user_name: user.display_name || user.full_name,
         user_upi_id: user.upi_id,

@@ -1,9 +1,7 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 
-const LOGIN_URL = "https://shubhdhanlakshmi-beta-version.db.app/login";
-const REGISTER_URL = "https://shubhdhanlakshmi-beta-version.db.app/register";
+const LOGIN_URL = "https://shubhdhanlakshmi-beta-version.base44.app/login";
+const REGISTER_URL = "https://shubhdhanlakshmi-beta-version.base44.app/register";
 const CANONICAL_URL = "https://shubhdhanlakshmi.com";
 
 function escapeHtml(str) {
@@ -24,11 +22,11 @@ function textToHtml(str) {
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await db.auth.me();
+    const user = await base44.auth.me();
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
 
-    const settingsList = await db.asServiceRole.entities.AppSettings.list();
+    const settingsList = await base44.asServiceRole.entities.AppSettings.list();
     const s = settingsList[0] || {};
 
     const termsHtml = textToHtml(s.terms_conditions) || defaultTerms();

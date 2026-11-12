@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { Navigate } from "react-router-dom";
 import PartnerInfo from "@/components/partner/PartnerInfo";
 import PartnerRequestForm from "@/components/partner/PartnerRequestForm";
@@ -16,8 +14,8 @@ export default function PartnerPage() {
 
   const loadData = async () => {
     const [u, s] = await Promise.all([
-      db.auth.me(),
-      db.entities.AppSettings.list(),
+      base44.auth.me(),
+      base44.entities.AppSettings.list(),
     ]);
     setUser(u);
     setSettings(s[0]);

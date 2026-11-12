@@ -1,5 +1,3 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 
 function base64UrlEncode(str: string): string {
@@ -30,7 +28,7 @@ function buildRawMessage(to: string, from: string, subject: string, htmlBody: st
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await db.auth.me();
+    const user = await base44.auth.me();
     if (!user) return Response.json({ error: "Unauthorized" }, { status: 401 });
     if (user.role !== "admin") return Response.json({ error: "Forbidden" }, { status: 403 });
 
@@ -45,12 +43,12 @@ export default async function(req: Request): Promise<Response> {
 
     if (recipientType === "single") {
       if (!userId) return Response.json({ error: "userId required for single recipient" }, { status: 400 });
-      const u = await db.asServiceRole.entities.User.get(userId);
+      const u = await base44.asServiceRole.entities.User.get(userId);
       if (u && u.email) {
         recipients = [{ email: u.email, name: u.display_name || u.full_name || "User" }];
       }
     } else if (recipientType === "kyc_incomplete") {
-      const users = await db.asServiceRole.entities.User.filter({
+      const users = await base44.asServiceRole.entities.User.filter({
         kyc_status: { $nin: ["approved"] },
         role: "user",
       });
@@ -58,14 +56,14 @@ export default async function(req: Request): Promise<Response> {
         .filter((u: any) => u.email)
         .map((u: any) => ({ email: u.email, name: u.display_name || u.full_name || "User" }));
     } else if (recipientType === "active_loans") {
-      // "Active users" — every user whose account is currently active.
-      const users = await db.asServiceRole.entities.User.filter({ role: "user" });
+      // "Active users" — only accounts marked active in the app.
+      const users = await base44.asServiceRole.entities.User.filter({ role: "user", account_status: "active" });
       recipients = users
-        .filter((u: any) => u.email && (u.account_status || "active") === "active")
+        .filter((u: any) => u.email)
         .map((u: any) => ({ email: u.email, name: u.display_name || u.full_name || "User" }));
     } else if (recipientType === "all") {
-      // "All users" means every approved user — KYC already completed.
-      const users = await db.asServiceRole.entities.User.filter({ role: "user", kyc_status: "approved" });
+      // "All users" — every registered user account.
+      const users = await base44.asServiceRole.entities.User.filter({ role: "user" });
       recipients = users
         .filter((u: any) => u.email)
         .map((u: any) => ({ email: u.email, name: u.display_name || u.full_name || "User" }));
@@ -78,7 +76,7 @@ export default async function(req: Request): Promise<Response> {
     }
 
     // Get Gmail access token
-    const { accessToken } = await db.asServiceRole.connectors.getConnection("gmail");
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection("gmail");
     const from = fromName
       ? `${fromName} <shubhdhanlakshmifund@gmail.com>`
       : "shubhdhanlakshmifund@gmail.com";

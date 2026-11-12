@@ -13,6 +13,7 @@ import WalletPage from "@/pages/app/WalletPage";
 import ProfilePage from "@/pages/app/ProfilePage";
 import InstallPrompt from "@/components/InstallPrompt";
 import NotificationsModal from "@/components/NotificationsModal";
+import AppUpdatePrompt from "@/components/AppUpdatePrompt";
 import NeuAppLoader from "@/components/NeuAppLoader";
 import { SDL_LOGO } from "@/lib/sdlUtils";
 import { initPushNotifications, isNative, pushNewNotifications } from "@/lib/pushNotifications";
@@ -144,6 +145,7 @@ export default function UserAppShell({ user, onUserUpdate }) {
       </div>
 
       {showNotif && <NotificationsModal user={user} onClose={() => { setShowNotif(false); loadUnread(); }} />}
+      <AppUpdatePrompt />
 
       {/* Bottom Nav */}
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-4 pb-4 z-30">

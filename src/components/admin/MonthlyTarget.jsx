@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect, useMemo } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatINR, monthKey } from "@/lib/sdlUtils";
 import NeuInput from "@/components/NeuInput";
 import { Target, Loader2, X, CheckCircle2, ChevronDown, Calendar, Pencil, Trash2 } from "lucide-react";
@@ -24,7 +22,7 @@ export default function MonthlyTarget({ monthly, allMonths }) {
 
   const loadTargets = async () => {
     try {
-      const rows = await db.entities.MonthlyTarget.list("-created_date", 500);
+      const rows = await base44.entities.MonthlyTarget.list("-created_date", 500);
       const map = {};
       rows.forEach((r) => {
         if (r.month_key) map[r.month_key] = { id: r.id, amount: Number(r.amount) || 0 };
@@ -67,7 +65,7 @@ export default function MonthlyTarget({ monthly, allMonths }) {
     if (!window.confirm(`Delete the target for ${monthLabel(mk)}?`)) return;
     setSaving(true);
     try {
-      await db.entities.MonthlyTarget.delete(existing.id);
+      await base44.entities.MonthlyTarget.delete(existing.id);
       const updated = { ...targets };
       delete updated[mk];
       setTargets(updated);
@@ -82,14 +80,14 @@ export default function MonthlyTarget({ monthly, allMonths }) {
       const existing = targets[selectedMonth];
       if (val > 0) {
         if (existing) {
-          await db.entities.MonthlyTarget.update(existing.id, { amount: val });
+          await base44.entities.MonthlyTarget.update(existing.id, { amount: val });
           setTargets({ ...targets, [selectedMonth]: { id: existing.id, amount: val } });
         } else {
-          const created = await db.entities.MonthlyTarget.create({ month_key: selectedMonth, amount: val });
+          const created = await base44.entities.MonthlyTarget.create({ month_key: selectedMonth, amount: val });
           setTargets({ ...targets, [selectedMonth]: { id: created.id, amount: val } });
         }
       } else if (existing) {
-        await db.entities.MonthlyTarget.delete(existing.id);
+        await base44.entities.MonthlyTarget.delete(existing.id);
         const updated = { ...targets };
         delete updated[selectedMonth];
         setTargets(updated);

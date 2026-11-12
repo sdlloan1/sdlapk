@@ -1,5 +1,3 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 // SDL shared utility functions
 
 export function upiQrUrl(upiId, amount, name = "SDL Shubh Dhan Lakshmi") {
@@ -137,8 +135,6 @@ export function generateLoanId(user) {
   return `SDL${mobile}${dd}${mm}${yyyy}${namePart}${randomDigits}`;
 }
 
-// Bundled app icon (public/logo.png), so the logo also works in the APK
-// WebView and renders without CORS in the QR/PDF canvases.
 export const SDL_LOGO = `${import.meta.env.BASE_URL}logo.png`;
 
 // Canonical app domain used for referral links and share previews.

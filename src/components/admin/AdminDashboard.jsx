@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState, useEffect, useMemo } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { formatINR, formatDate, monthKey } from "@/lib/sdlUtils";
 import NeuInput from "@/components/NeuInput";
 import { TrendingUp, HandCoins, PiggyBank, Plus, X, Loader2, Calendar, Coins, Wallet, ChevronDown, AlertCircle, ArrowUpRight, Download } from "lucide-react";
@@ -35,31 +33,31 @@ export default function AdminDashboard() {
     setError(false);
     try {
       // One at a time + cached, so the aggregate rate limit is never hit in a burst
-      setCapitalAgg(await cachedAggregate("capital", () => db.entities.AdminCapital.aggregate({
+      setCapitalAgg(await cachedAggregate("capital", () => base44.entities.AdminCapital.aggregate({
         dateBucket: { field: "created_date", unit: "month" },
         groupBy: "type",
         sum: "amount",
       })));
-      setLoanAgg(await cachedAggregate("loans", () => db.entities.LoanApplication.aggregate({
+      setLoanAgg(await cachedAggregate("loans", () => base44.entities.LoanApplication.aggregate({
         dateBucket: { field: "created_date", unit: "month" },
         groupBy: "status",
         sum: ["amount", "repayment_amount"],
       })));
-      setWalletAgg(await cachedAggregate("wallet", () => db.entities.WalletTransaction.aggregate({
+      setWalletAgg(await cachedAggregate("wallet", () => base44.entities.WalletTransaction.aggregate({
         query: { status: "completed" },
         dateBucket: { field: "created_date", unit: "month" },
         groupBy: "type",
         sum: "amount",
       })));
-      setAssignmentAgg(await cachedAggregate("assignments", () => db.entities.PartnerLoanAssignment.aggregate({
+      setAssignmentAgg(await cachedAggregate("assignments", () => base44.entities.PartnerLoanAssignment.aggregate({
         dateBucket: { field: "created_date", unit: "month" },
         sum: "profit_earned",
       })));
 
-      const capList = await db.entities.AdminCapital.list("-created_date", 10);
+      const capList = await base44.entities.AdminCapital.list("-created_date", 10);
       setCapital(capList);
 
-      try { setDownloads(await db.entities.AppDownload.count()); } catch { setDownloads(0); }
+      try { setDownloads(await base44.entities.AppDownload.count()); } catch { setDownloads(0); }
     } catch (e) {
       setError(true);
     }
@@ -325,7 +323,7 @@ function AddCapitalModal({ onClose, onDone }) {
     if (!amount || Number(amount) <= 0) { alert("Enter valid amount"); return; }
     setLoading(true);
     try {
-      await db.entities.AdminCapital.create({
+      await base44.entities.AdminCapital.create({
         type, amount: Number(amount), description: description.trim(), month_key: monthKey(new Date()),
       });
       onDone();
@@ -372,7 +370,7 @@ function ProfitWithdrawModal({ onClose, onDone, maxProfit }) {
     if (amt > maxProfit) { alert("Cannot withdraw more than available real profit"); return; }
     setLoading(true);
     try {
-      await db.entities.AdminCapital.create({
+      await base44.entities.AdminCapital.create({
         type: "withdrawal",
         amount: amt,
         description: description.trim() || "Admin profit withdrawal",

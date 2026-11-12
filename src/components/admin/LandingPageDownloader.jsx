@@ -1,7 +1,5 @@
-const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me: async()=>null }, entities:new Proxy({}, { get:()=>({ filter:async()=>[], get:async()=>null, create:async()=>({}), update:async()=>({}), delete:async()=>({}) }) }), integrations:{ Core:{ UploadFile:async()=>({ file_url:'' }) } } };
-
 import React, { useState } from "react";
-
+import { base44 } from "@/api/base44Client";
 import { Download, Eye, Loader2, Globe, CheckCircle2, RefreshCw } from "lucide-react";
 
 export default function LandingPageDownloader({ settings }) {
@@ -14,7 +12,7 @@ export default function LandingPageDownloader({ settings }) {
     setDone(false);
     setRegenerated(false);
     try {
-      const res = await db.functions.invoke("generateLandingPage", {});
+      const res = await base44.functions.invoke("generateLandingPage", {});
       const data = res.data || res;
       if (!data.html) throw new Error("No HTML returned");
       const blob = new Blob([data.html], { type: "text/html" });
