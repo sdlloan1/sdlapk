@@ -139,7 +139,7 @@ export function generateLoanId(user) {
 
 // Bundled app icon (public/logo.png), so the logo also works in the APK
 // WebView and renders without CORS in the QR/PDF canvases.
-export const SDL_LOGO = "/logo.png";
+export const SDL_LOGO = `${import.meta.env.BASE_URL}logo.png`;
 
 // Canonical app domain used for referral links and share previews.
 export const APP_DOMAIN = "https://shubhdhanlakshmi.com";

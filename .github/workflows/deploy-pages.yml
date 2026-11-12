@@ -1,0 +1,63 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Pages serves the site from https://<owner>.github.io/<repo>/, so the
+      # build is emitted under that base path. There is no backend on Pages, so
+      # the bundle talks to the hosted Base44 backend instead (its API answers
+      # Access-Control-Allow-Origin: *, so cross-origin requests work).
+      - name: Build
+        run: npm run build
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_BASE44_APP_ID: 6a65ccde323b932e9e9dc990
+          VITE_BASE44_API_BASE_URL: https://sdlapk-02aafe92.base44.app
+          VITE_BASE44_APP_BASE_URL: https://sdlapk-02aafe92.base44.app
+
+      # Pages has no SPA rewrite: unknown paths would 404. Serving index.html as
+      # the 404 page lets React Router take over the deep link.
+      - name: Prepare Pages artifact
+        run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

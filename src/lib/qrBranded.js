@@ -2,7 +2,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import { upiQrUrl, formatINR } from "@/lib/sdlUtils";
 
-const SDL_LOGO = "/logo.png";
+const SDL_LOGO = `${import.meta.env.BASE_URL}logo.png`;
 
 function loadImage(src, crossOrigin) {
   return new Promise((resolve) => {

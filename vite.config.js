@@ -20,7 +20,14 @@ const previewProxy =
     : {}
 
 // https://vite.dev/config/
+// GitHub Pages serves the site from https://<owner>.github.io/<repo>/, so that
+// build is emitted under VITE_BASE_PATH (/<repo>/) and every asset URL gets the
+// prefix. Local dev, the Base44 preview and the Base44 build keep "/".
+const base = process.env.VITE_BASE_PATH || '/'
+
+// https://vite.dev/config/
 export default defineConfig({
+  base,
   plugins: [
     base44({
       // Support for legacy code that imports the base44 SDK with @/integrations, @/entities, etc.

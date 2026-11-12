@@ -25,7 +25,7 @@ export default function AdminLogin() {
     setLoading(true);
     try {
       await db.auth.loginViaEmailPassword(email, password);
-      window.location.href = "/sdlsubr1250noida";
+      window.location.href = `${import.meta.env.BASE_URL}sdlsubr1250noida`;
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {

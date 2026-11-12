@@ -2,7 +2,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import React from "react";
 
-const SDL_LOGO = "/logo.png";
+const SDL_LOGO = `${import.meta.env.BASE_URL}logo.png`;
 
 export default function NeuAuthLayout({ title, subtitle, footer, children }) {
   return (

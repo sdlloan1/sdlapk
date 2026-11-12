@@ -18,7 +18,8 @@ export default function DownloadAppModal({ onClose }) {
   // /download/SDL - Shubh Dhan Lakshmi.apk, so Android works out of the box
   // without an admin-configured link.
   const androidUrl =
-    settings?.apk_android_url || `/download/${encodeURIComponent("SDL - Shubh Dhan Lakshmi.apk")}`;
+    settings?.apk_android_url ||
+    `${import.meta.env.BASE_URL}download/${encodeURIComponent("SDL - Shubh Dhan Lakshmi.apk")}`;
 
   const download = (url, label) => {
     if (!url) {
