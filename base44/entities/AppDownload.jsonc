@@ -2,6 +2,9 @@
   "name": "AppDownload",
   "type": "object",
   "properties": {
+    "user_id": {
+      "type": "string"
+    },
     "user_name": {
       "type": "string"
     },
@@ -9,7 +12,13 @@
       "type": "string",
       "enum": [
         "android",
-        "ios"
+        "ios",
+        "pwa"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "purple"
       ],
       "default": "android"
     },
@@ -17,9 +26,6 @@
       "type": "string"
     },
     "file_name": {
-      "type": "string"
-    },
-    "user_id": {
       "type": "string"
     },
     "referrer": {
@@ -34,9 +40,16 @@
   ],
   "rls": {
     "create": {
-      "user_condition": {
-        "role": "admin"
-      }
+      "$or": [
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
     },
     "read": {
       "user_condition": {

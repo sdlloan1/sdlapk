@@ -2,7 +2,7 @@ const db = globalThis.__B44_DB__ || { auth:{ isAuthenticated: async()=>false, me
 
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.40';
 
-const PLATFORMS = ['android', 'ios'];
+const PLATFORMS = ['android', 'ios', 'pwa'];
 
 // Counts one APK/AAB download. Fired from the download page and the download
 // modal before the file is served, so it works for signed-out visitors too.
