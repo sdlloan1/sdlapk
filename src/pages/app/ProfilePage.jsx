@@ -15,6 +15,7 @@ import {
   import DownloadAppModal from "@/components/DownloadAppModal";
   import PhotoAdjustModal from "@/components/PhotoAdjustModal";
   import { logoutToLogin } from "@/lib/logout";
+  import AppInfoCard from "@/components/AppInfoCard";
 
 export default function ProfilePage({ user, onUserUpdate, settings, active }) {
   const navigate = useNavigate();
@@ -166,6 +167,9 @@ export default function ProfilePage({ user, onUserUpdate, settings, active }) {
         <MenuItem icon={Info} label="About Us" onClick={() => setInfoModal(settings?.about_us)} />
         <MenuItem icon={LogOut} label="Logout" onClick={() => logoutToLogin(navigate)} />
       </div>
+
+      {/* App & device details */}
+      <AppInfoCard />
 
       {/* Modals */}
       {showEdit && <EditModal type={showEdit} user={user} onClose={() => setShowEdit(null)} onSaved={() => { setShowEdit(null); onUserUpdate(); }} />}
