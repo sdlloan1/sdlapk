@@ -5,6 +5,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { X, Download, Apple, Smartphone, ArrowRight } from "lucide-react";
 import { trackDownload } from "@/lib/appTraffic";
+import { getDeviceInfo, getLocation } from "@/lib/deviceInfo";
 
 export default function DownloadAppModal({ onClose, user }) {
   const [settings, setSettings] = useState(null);
@@ -32,11 +33,18 @@ export default function DownloadAppModal({ onClose, user }) {
     // writes the record directly (RLS allows their own user_id); visitors go
     // through the service-role beacon so onboarding downloads still count.
     if (user?.id) {
-      db.entities.AppDownload.create({
-        user_id: user.id,
-        user_name: user.display_name || user.full_name || "",
-        platform,
-      }).catch(() => {});
+      const device = getDeviceInfo();
+      getLocation().then((loc) => {
+        db.entities.AppDownload.create({
+          user_id: user.id,
+          user_name: user.display_name || user.full_name || "",
+          platform,
+          ...device,
+          ...loc,
+        }).catch(() => {});
+      });
+      // Marks this account as an installed-app user, so app update popups reach them.
+      db.auth.updateMe({ app_installed: true }).catch(() => {});
     } else {
       trackDownload(`download_modal_${platform}`, "", platform);
     }
