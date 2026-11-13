@@ -196,6 +196,13 @@
           }
         }
       }
+    },
+    "app_installed": {
+      "type": "boolean",
+      "default": false
+    },
+    "app_version": {
+      "type": "string"
     }
   },
   "required": [

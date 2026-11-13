@@ -5,6 +5,7 @@ import NeuInput from "@/components/NeuInput";
 import { TrendingUp, HandCoins, PiggyBank, Plus, X, Loader2, Calendar, Coins, Wallet, ChevronDown, AlertCircle, ArrowUpRight, Download } from "lucide-react";
 import { cachedAggregate, invalidateAggregate } from "@/lib/aggregateCache";
 import InvestmentStrategy from "@/components/admin/InvestmentStrategy";
+import AdminDownloads from "@/components/admin/AdminDownloads";
 import MonthlyTarget from "@/components/admin/MonthlyTarget";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid } from "recharts";
 
@@ -28,6 +29,7 @@ export default function AdminDashboard() {
   const [showProfitWithdraw, setShowProfitWithdraw] = useState(false);
   const [showProfitList, setShowProfitList] = useState(false);
   const [selectedMonth, setSelectedMonth] = useState(monthKey(new Date()));
+  const [showDownloads, setShowDownloads] = useState(false);
 
   const loadData = async () => {
     setError(false);
@@ -164,7 +166,7 @@ export default function AdminDashboard() {
     { icon: HandCoins, label: "Total Partner Profit", value: formatINR(totalPartnerProfit), bg: "bg-orange-100", iconColor: "text-orange-600" },
     { icon: AlertCircle, label: "Total Pending Amount", value: formatINR(totalPendingAmount), bg: "bg-red-100", iconColor: "text-sdl-red" },
     { icon: ArrowUpRight, label: "Total Upcoming Amount", value: formatINR(totalUpcomingAmount), bg: "bg-indigo-100", iconColor: "text-indigo-600" },
-    { icon: Download, label: "Total Downloads", value: String(downloads), bg: "bg-emerald-100", iconColor: "text-emerald-600" },
+    { icon: Download, label: "Total Downloads", value: String(downloads), bg: "bg-emerald-100", iconColor: "text-emerald-600", onClick: () => setShowDownloads(true) },
   ];
 
   return (
@@ -174,7 +176,7 @@ export default function AdminDashboard() {
         <h3 className="text-sm font-bold text-slate-600 mb-2">Overview</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           {fixedCards.map((c) => (
-            <SummaryCard key={c.label} icon={c.icon} label={c.label} value={c.value} bg={c.bg} iconColor={c.iconColor} />
+            <SummaryCard key={c.label} icon={c.icon} label={c.label} value={c.value} bg={c.bg} iconColor={c.iconColor} onClick={c.onClick} />
           ))}
         </div>
       </div>
@@ -285,19 +287,22 @@ export default function AdminDashboard() {
       {showAdd && <AddCapitalModal onClose={() => setShowAdd(false)} onDone={() => { setShowAdd(false); refreshAfterCapitalChange(); }} />}
       {showProfitWithdraw && <ProfitWithdrawModal onClose={() => setShowProfitWithdraw(false)} onDone={() => { setShowProfitWithdraw(false); refreshAfterCapitalChange(); }} maxProfit={totalRealProfit} />}
       {showProfitList && <ProfitListModal onClose={() => setShowProfitList(false)} capital={capital} />}
+      {showDownloads && <AdminDownloads onClose={() => setShowDownloads(false)} />}
     </div>
   );
 }
 
-function SummaryCard({ icon: Icon, label, value, bg, iconColor }) {
+function SummaryCard({ icon: Icon, label, value, bg, iconColor, onClick }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <div className="neu-card p-4">
+    <Tag onClick={onClick} className={`neu-card p-4 text-left w-full ${onClick ? "cursor-pointer hover:border-slate-300 transition-colors" : ""}`}>
       <div className={`w-9 h-9 rounded-full ${bg} flex items-center justify-center mb-2`}>
         <Icon className={`w-4 h-4 ${iconColor}`} />
       </div>
       <p className="text-[10px] text-slate-400">{label}</p>
       <p className="text-base font-bold text-slate-700">{value}</p>
-    </div>
+      {onClick && <p className="text-[9px] font-semibold text-sdl-orange mt-1">View details</p>}
+    </Tag>
   );
 }
 

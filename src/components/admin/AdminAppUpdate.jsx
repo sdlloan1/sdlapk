@@ -31,7 +31,7 @@ export default function AdminAppUpdate() {
     setResult(null);
     if (!version.trim()) { setError("Add the updated version."); return; }
     if (!/^https?:\/\/\S+$/i.test(url.trim())) { setError("Paste a valid download link starting with http:// or https://"); return; }
-    if (!window.confirm(`Publish v${version.trim()}? Every user will see the update popup.`)) return;
+    if (!window.confirm(`Publish v${version.trim()}? Users on the installed app will see the update popup.`)) return;
 
     setSending(true);
     try {
@@ -62,7 +62,7 @@ export default function AdminAppUpdate() {
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-700">Publish App Update</h3>
-            <p className="text-xs text-slate-400">Every user sees an in-app popup with an Install button.</p>
+            <p className="text-xs text-slate-400">Only users who installed the SDL app see the popup. Website visitors do not.</p>
           </div>
         </div>
 
@@ -113,7 +113,7 @@ export default function AdminAppUpdate() {
         {result && (
           <div className="neu-inset-sm rounded-xl p-3 mb-3 flex items-start gap-2">
             <CheckCircle2 className="w-4 h-4 text-sdl-green shrink-0 mt-0.5" />
-            <p className="text-xs text-slate-600">Update v{result.update?.version} is live. The popup will show for all users.</p>
+            <p className="text-xs text-slate-600">Update v{result.update?.version} is live. The popup shows to {result.notified ?? 0} app user{result.notified === 1 ? "" : "s"} still on an older version.</p>
           </div>
         )}
 

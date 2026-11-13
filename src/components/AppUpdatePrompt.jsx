@@ -3,31 +3,59 @@ import { base44 } from "@/api/base44Client";
 import { Smartphone, Download, Clock, AlertTriangle, X } from "lucide-react";
 
 const REMIND_KEY = "sdl_app_update_remind";
+const INSTALLED_KEY = "sdl_app_installed_version";
 
-// Shows the latest published app version to the user, with Install and Remind me later.
-export default function AppUpdatePrompt() {
+// True only when the app runs as the installed app on the phone (APK / home-screen
+// app), never for the website opened in a normal browser.
+function runningAsInstalledApp() {
+  try {
+    const modes = ["standalone", "fullscreen", "minimal-ui"];
+    if (modes.some((m) => window.matchMedia(`(display-mode: ${m})`).matches)) return true;
+  } catch (e) {}
+  return window.navigator.standalone === true;
+}
+
+function localInstalledVersion() {
+  try {
+    return localStorage.getItem(INSTALLED_KEY) || "";
+  } catch (e) {
+    return "";
+  }
+}
+
+// Shows the latest published app version to users who installed the SDL app.
+export default function AppUpdatePrompt({ user }) {
   const [update, setUpdate] = useState(null);
 
   useEffect(() => {
     let alive = true;
-    base44.entities.AppUpdate.filter({ is_active: true }, "-created_date", 1)
-      .then((list) => {
-        if (!alive) return;
-        const latest = list[0];
-        if (!latest) return;
-        try {
-          const saved = JSON.parse(localStorage.getItem(REMIND_KEY) || "null");
-          if (saved && saved.id === latest.id && Number(saved.until) > Date.now()) return;
-        } catch (e) {}
-        setUpdate(latest);
-      })
-      .catch(() => {});
+
+    const load = async () => {
+      // Website-only users never see the popup.
+      if (!runningAsInstalledApp() && !user?.app_installed) return;
+
+      const list = await base44.entities.AppUpdate.filter({ is_active: true }, "-created_date", 1).catch(() => []);
+      const latest = list[0];
+      if (!alive || !latest) return;
+
+      // Already updated to this version — nothing to show.
+      const installedVersion = String(user?.app_version || "").trim() || localInstalledVersion();
+      if (installedVersion && installedVersion === String(latest.version).trim()) return;
+
+      try {
+        const saved = JSON.parse(localStorage.getItem(REMIND_KEY) || "null");
+        if (saved && saved.version === latest.version && Number(saved.until) > Date.now()) return;
+      } catch (e) {}
+      setUpdate(latest);
+    };
+
+    load().catch(() => {});
     return () => { alive = false; };
-  }, []);
+  }, [user?.id, user?.app_installed, user?.app_version]);
 
   const remember = (days) => {
     try {
-      localStorage.setItem(REMIND_KEY, JSON.stringify({ id: update.id, until: Date.now() + days * 86400000 }));
+      localStorage.setItem(REMIND_KEY, JSON.stringify({ version: update.version, until: Date.now() + days * 86400000 }));
     } catch (e) {}
   };
 
@@ -37,7 +65,12 @@ export default function AppUpdatePrompt() {
   };
 
   const install = () => {
+    // Remember the installed version so this update is never shown again.
+    try { localStorage.setItem(INSTALLED_KEY, update.version); } catch (e) {}
     remember(365);
+    if (user?.id) {
+      base44.auth.updateMe({ app_version: update.version, app_installed: true }).catch(() => {});
+    }
     window.open(update.download_url, "_blank");
     setUpdate(null);
   };

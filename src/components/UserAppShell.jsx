@@ -17,6 +17,7 @@ import AppUpdatePrompt from "@/components/AppUpdatePrompt";
 import NeuAppLoader from "@/components/NeuAppLoader";
 import { SDL_LOGO } from "@/lib/sdlUtils";
 import { initPushNotifications, isNative, pushNewNotifications } from "@/lib/pushNotifications";
+import { getDeviceInfo, getLocation } from "@/lib/deviceInfo";
 import { motion } from "framer-motion";
 
 const INACTIVITY_LIMIT = 10 * 60 * 1000; // 10 minutes
@@ -39,6 +40,21 @@ export default function UserAppShell({ user, onUserUpdate }) {
 
   useEffect(() => {
     db.entities.AppSettings.list().then((s) => setSettings(s[0]));
+  }, []);
+
+  // Traffic log: one record per app open, with device and location.
+  useEffect(() => {
+    if (!user?.id) return;
+    const device = getDeviceInfo();
+    getLocation().then((loc) => {
+      db.entities.AppVisit.create({
+        user_id: user.id,
+        user_name: user.display_name || user.full_name || "",
+        page: "app",
+        ...device,
+        ...loc,
+      }).catch(() => {});
+    });
   }, []);
 
   // Auto-logout after 10 minutes inactivity
@@ -145,7 +161,7 @@ export default function UserAppShell({ user, onUserUpdate }) {
       </div>
 
       {showNotif && <NotificationsModal user={user} onClose={() => { setShowNotif(false); loadUnread(); }} />}
-      <AppUpdatePrompt />
+      <AppUpdatePrompt user={user} />
 
       {/* Bottom Nav */}
       <div className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md px-4 pb-4 z-30">

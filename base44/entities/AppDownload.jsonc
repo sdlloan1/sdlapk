@@ -33,6 +33,37 @@
     },
     "user_agent": {
       "type": "string"
+    },
+    "device_type": {
+      "type": "string",
+      "enum": [
+        "mobile",
+        "tablet",
+        "desktop"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "gray"
+      ]
+    },
+    "device_model": {
+      "type": "string"
+    },
+    "os_version": {
+      "type": "string"
+    },
+    "browser": {
+      "type": "string"
+    },
+    "country": {
+      "type": "string"
+    },
+    "region": {
+      "type": "string"
+    },
+    "city": {
+      "type": "string"
     }
   },
   "required": [

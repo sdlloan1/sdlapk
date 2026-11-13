@@ -24,7 +24,8 @@ export default async function(req: Request): Promise<Response> {
     // Only the newest update is active; older ones stay in the history.
     await base44.asServiceRole.entities.AppUpdate.updateMany({ is_active: true }, { $set: { is_active: false } });
 
-    const userCount = await base44.asServiceRole.entities.User.count({ role: 'user' }).catch(() => 0);
+    // Only users who installed the SDL app see the popup, so count those.
+    const userCount = await base44.asServiceRole.entities.User.count({ role: 'user', app_installed: true }).catch(() => 0);
 
     // No notification is created: users see the update as an in-app popup when they open the app.
     const update = await base44.asServiceRole.entities.AppUpdate.create({
